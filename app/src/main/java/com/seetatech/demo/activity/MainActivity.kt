@@ -1,4 +1,4 @@
-package com.seetatech.demo
+package com.seetatech.demo.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle

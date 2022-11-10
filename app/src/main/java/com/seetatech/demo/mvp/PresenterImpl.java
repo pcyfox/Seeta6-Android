@@ -57,6 +57,9 @@ public class PresenterImpl implements VerificationContract.Presenter {
     public static FaceLandmarker faceLandmarker = null;
     public static FaceRecognizer faceRecognizer = null;
 
+    private boolean needFaceRegister = false;//是否需要注册人脸
+    public String registeredName = null;
+
     public static class TrackingInfo {
         public Mat matBgr;
         public Mat matGray;
@@ -137,6 +140,11 @@ public class PresenterImpl implements VerificationContract.Presenter {
         return appCacheDir;
     }
 
+    public void startRegisterFace(boolean needFaceRegister, String registeredName) {
+        this.registeredName = registeredName;
+        this.needFaceRegister = needFaceRegister;
+    }
+
     private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
         @Override
         public void handleMessage(Message msg) {
@@ -176,12 +184,9 @@ public class PresenterImpl implements VerificationContract.Presenter {
                             Bitmap.Config.ARGB_8888);
                     Utils.matToBitmap(faceMatBGRA, faceBmp);
                     mView.drawFaceImage(faceBmp);
-
                 }
-
                 mFasHandler.removeMessages(0);
                 mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
-
             } else {
                 mView.drawFaceRect(null);
             }
@@ -196,43 +201,35 @@ public class PresenterImpl implements VerificationContract.Presenter {
             trackingInfo.matGray = new Mat();
             final Rect faceRect = trackingInfo.faceRect;
             trackingInfo.matBgr.get(0, 0, imageData.data);
-
             String targetName = "unknown";
-
             //注册人脸
-            MainFragment mainFragment = (MainFragment) mView;
-            if (mainFragment.needFaceRegister) {
-                String registeredName = "";
+            if (needFaceRegister) {
                 boolean canRegister = true;
                 float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
-
                 if (trackingInfo.faceInfo.width != 0) {
                     //特征点检测
                     SeetaPointF[] points = new SeetaPointF[5];
                     faceLandmarker.mark(imageData, trackingInfo.faceInfo, points);
-
                     //特征提取
                     faceRecognizer.Extract(imageData, points, feats);
-
-                    if ("".equals(mainFragment.registeredName)) {
+                    if ("".equals(registeredName)) {
                         canRegister = false;
                         final String tip = "注册名称不能为空";
                         new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
                     }
-
                     for (String key : trackingInfo.name2feats.keySet()) {
-                        if (key.equals(mainFragment.registeredName)) {
+                        if (key.equals(registeredName)) {
                             canRegister = false;
-                            final String tip = mainFragment.registeredName + "已经注册";
+                            final String tip = registeredName + "已经注册";
                             new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
                         }
                     }
                 }
-
                 //进行人脸的注册
                 if (canRegister) {
-                    trackingInfo.name2feats.put(mainFragment.registeredName, feats);
-                    final String tip = mainFragment.registeredName + "名称已经注册成功";
+                    startRegisterFace(false, "");
+                    trackingInfo.name2feats.put(registeredName, feats);
+                    final String tip = registeredName + "名称已经注册成功";
                     new Handler(Looper.getMainLooper()).post(() -> mView.FaceRegister(tip));
                 }
             }
@@ -242,7 +239,6 @@ public class PresenterImpl implements VerificationContract.Presenter {
                 //特征点检测
                 SeetaPointF[] points = new SeetaPointF[5];
                 faceLandmarker.mark(imageData, trackingInfo.faceInfo, points);
-
                 //特征提取
                 if (!trackingInfo.name2feats.isEmpty()) {//不空进行特征提取，并比对
                     float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
@@ -290,7 +286,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();
     }
 
-    public void saveImgage(Mat bgr, String path, String imageName) {
+    public void saveImage(Mat bgr, String path, String imageName) {
         Mat rgba = bgr.clone();
         Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_BGR2RGBA);
 

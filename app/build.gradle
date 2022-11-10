@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
+    id 'kotlin-android'
+    id 'kotlin-android-extensions'
 }
 
 android {
@@ -11,7 +13,7 @@ android {
     defaultConfig {
         applicationId "com.df.seeta6"
         minSdk 23
-        targetSdk 24
+        targetSdk 32
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -42,11 +44,12 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.7.20"
 
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'com.google.android.material:material:1.6.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

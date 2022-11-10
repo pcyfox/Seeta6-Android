@@ -1,16 +1,11 @@
-package com.seetatech.demo
+package com.seetatech.demo.activity
 
 import android.app.Application
-import com.seetatech.demo.SeetaApplication
 
 class SeetaApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-    }
-
-    override fun onTerminate() {
-        super.onTerminate()
     }
 
     companion object {

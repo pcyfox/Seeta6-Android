@@ -8,14 +8,14 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        tools:context="com.seetatech.demo.LaunchActivity">
+        tools:context="com.seetatech.demo.activity.LaunchActivity">
 
         <ImageView
-            android:src="@drawable/seeta_logo"
             android:id="@+id/best_image"
             android:layout_width="480px"
             android:layout_height="640px"
             android:layout_gravity="center_horizontal"
+            android:src="@drawable/seeta_logo"
             android:visibility="visible" />
 
         <TextView
@@ -29,5 +29,13 @@
             android:layout_height="wrap_content"
             android:onClick="onClick"
             android:text="开始识别" />
+
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onTestClick"
+            android:text="Test" />
+
     </LinearLayout>
 </layout>

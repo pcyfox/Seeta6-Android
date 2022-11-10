@@ -7,7 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#4833B5E5"
-        tools:context="com.seetatech.demo.MainActivity">
+        tools:context="com.seetatech.demo.activity.MainActivity">
 
         <com.seetatech.demo.camera.CameraPreview2
             android:id="@+id/camera_preview"

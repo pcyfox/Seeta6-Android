@@ -15,21 +15,27 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
-        android:name="com.seetatech.demo.SeetaApplication"
+        android:name="com.seetatech.demo.activity.SeetaApplication"
         android:allowBackup="true"
         android:icon="@drawable/seeta_logo"
         android:label="@string/app_name"
         android:largeHeap="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
-            android:name="com.seetatech.demo.MainActivity"
+            android:name="com.seetatech.demo.activity.TestActivity"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name="com.seetatech.demo.activity.MainActivity"
             android:hardwareAccelerated="true"
             android:screenOrientation="sensor"
             android:theme="@style/Theme.AppCompat.Dialog" />
 
         <activity
-            android:name="com.seetatech.demo.LaunchActivity"
+            android:name="com.seetatech.demo.activity.LaunchActivity"
             android:exported="true"
             android:screenOrientation="sensorLandscape">
             <intent-filter>

@@ -15,7 +15,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -50,6 +49,7 @@ public class MainFragment extends Fragment implements VerificationContract.View 
 
     // Show compared score and start tip. Add by linhx 20170428 end
     private VerificationContract.Presenter mPresenter;
+
     private AlertDialog mCameraUnavailableDialog;
     private Camera.Size mPreviewSize;
 
@@ -93,10 +93,12 @@ public class MainFragment extends Fragment implements VerificationContract.View 
         mFaceRectPaint.setColor(Color.argb(150, 0, 255, 0));
         mFaceRectPaint.setStrokeWidth(3);
         mFaceRectPaint.setStyle(Paint.Style.STROKE);
+
         Paint mFaceNamePaint = new Paint();
         mFaceNamePaint.setColor(Color.argb(150, 0, 255, 0));
         mFaceNamePaint.setTextSize(50);
         mFaceNamePaint.setStyle(Paint.Style.FILL);
+
         new PresenterImpl(getContext(), this);
 
     }
@@ -119,9 +121,9 @@ public class MainFragment extends Fragment implements VerificationContract.View 
         edit_name = getView().findViewById(R.id.et_registername);
         btn_register = getView().findViewById(R.id.btn_register);
 
-
         mOverlap.setZOrderOnTop(true);
         mOverlap.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+
         mOverlapHolder = mOverlap.getHolder();
         mCameraPreview.setCameraCallbacks(mCameraCallbacks);
 
@@ -145,13 +147,11 @@ public class MainFragment extends Fragment implements VerificationContract.View 
             return;
         }
         canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-
         if (faceRect != null) {
             faceRect.x *= mPreviewScaleX;
             faceRect.y *= mPreviewScaleY;
             faceRect.width *= mPreviewScaleX;
             faceRect.height *= mPreviewScaleY;
-
             focusRect.left = faceRect.x;
             focusRect.right = faceRect.x + faceRect.width;
             focusRect.top = faceRect.y;
@@ -255,10 +255,6 @@ public class MainFragment extends Fragment implements VerificationContract.View 
         return getView() != null && isAdded() && !isDetached();
     }
 
-    @Override
-    public TextureView getTextureView() {
-        return mCameraPreview;
-    }
 
     @Override
     public void onDestroyView() {

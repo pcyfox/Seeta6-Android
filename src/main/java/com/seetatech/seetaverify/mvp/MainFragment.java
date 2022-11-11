@@ -11,18 +11,11 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -30,7 +23,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.seeta.sdk.SeetaImageData;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+
 import com.seetatech.seetaverify.R;
 import com.seetatech.seetaverify.camera.CameraCallbacks;
 import com.seetatech.seetaverify.camera.CameraPreview2;
@@ -42,11 +41,8 @@ import butterknife.ButterKnife;
 
 
 @SuppressWarnings("deprecation")
-public class MainFragment extends Fragment
-        implements VerificationContract.View {
-
+public class MainFragment extends Fragment implements VerificationContract.View {
     public static final String TAG = "MainFragment";
-
     private static final int REQUEST_CAMERA_PERMISSION = 200;
 
     @BindView(R.id.camera_preview)
@@ -64,34 +60,28 @@ public class MainFragment extends Fragment
     @BindView(R.id.btn_register)
     Button btn_register;
 
-    // Show compared score and start tip. Add by linhx 20170428 end
     private VerificationContract.Presenter mPresenter;
     private AlertDialog mCameraUnavailableDialog;
     private Camera.Size mPreviewSize;
 
     private SurfaceHolder mOverlapHolder;
-    private Rect focusRect = new Rect();
+    private final Rect focusRect = new Rect();
     private Paint mFaceRectPaint = null;
     private Paint mFaceNamePaint = null;
 
     private float mPreviewScaleX = 1.0f;
     private float mPreviewScaleY = 1.0f;
 
-    private int mCurrentStatus = 0;
-    private Mat mImageAfterBlink = null;
-    private org.opencv.core.Rect mFaceRectAfterBlink = null;
-
     public boolean needFaceRegister = false;//是否需要注册人脸
     public String registeredName = "";//注册的名称
 
     public String recognizedName = "";
 
-    public SeetaImageData imageData = new SeetaImageData(480, 640, 3);
 
-    private CameraCallbacks mCameraCallbacks = new CameraCallbacks() {
+    private final CameraCallbacks mCameraCallbacks = new CameraCallbacks() {
         @Override
         public void onCameraUnavailable(int errorCode) {
-            Log.e(TAG, "camera unavailable, reason=%d"+errorCode);
+            Log.e(TAG, "camera unavailable, reason=%d" + errorCode);
             showCameraUnavailableDialog(errorCode);
         }
 
@@ -99,13 +89,10 @@ public class MainFragment extends Fragment
         public void onPreviewFrame(byte[] data, Camera camera) {
             if (mPreviewSize == null) {
                 mPreviewSize = camera.getParameters().getPreviewSize();
-
                 mPreviewScaleX = (float) (mCameraPreview.getHeight()) / mPreviewSize.width;
                 mPreviewScaleY = (float) (mCameraPreview.getWidth()) / mPreviewSize.height;
             }
-
-            mPresenter.detect(data, mPreviewSize.width, mPreviewSize.height,
-                    mCameraPreview.getCameraRotation());
+            mPresenter.detect(data, mPreviewSize.width, mPreviewSize.height, mCameraPreview.getCameraRotation());
         }
     };
 
@@ -118,13 +105,10 @@ public class MainFragment extends Fragment
         mFaceRectPaint.setColor(Color.argb(150, 0, 255, 0));
         mFaceRectPaint.setStrokeWidth(3);
         mFaceRectPaint.setStyle(Paint.Style.STROKE);
-
         mFaceNamePaint = new Paint();
-        mFaceNamePaint.setColor(Color.argb(150, 0,255, 0));
+        mFaceNamePaint.setColor(Color.argb(150, 0, 255, 0));
         mFaceNamePaint.setTextSize(50);
         mFaceNamePaint.setStyle(Paint.Style.FILL);
-
-
     }
 
     @Nullable
@@ -142,26 +126,14 @@ public class MainFragment extends Fragment
         mOverlap.setZOrderOnTop(true);
         mOverlap.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         mOverlapHolder = mOverlap.getHolder();
-
         mCameraPreview.setCameraCallbacks(mCameraCallbacks);
-
-//        setStatus(0, null, null);
-
-        btn_register.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //人脸注册
-                needFaceRegister = true;
-                registeredName = edit_name.getText().toString();
-            }
+        btn_register.setOnClickListener(view12 -> {
+            //人脸注册
+            needFaceRegister = true;
+            registeredName = edit_name.getText().toString();
         });
 
-        edit_name.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                edit_name.setFocusable(true);
-            }
-        });
+        edit_name.setOnClickListener(view1 -> edit_name.setFocusable(true));
     }
 
     @WorkerThread
@@ -175,7 +147,6 @@ public class MainFragment extends Fragment
             return;
         }
         canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-
         if (faceRect != null) {
             faceRect.x *= mPreviewScaleX;
             faceRect.y *= mPreviewScaleY;
@@ -186,11 +157,8 @@ public class MainFragment extends Fragment
             focusRect.right = faceRect.x + faceRect.width;
             focusRect.top = faceRect.y;
             focusRect.bottom = faceRect.y + faceRect.height;
-
             canvas.drawRect(focusRect, mFaceRectPaint);
         }
-
-
         mOverlapHolder.unlockCanvasAndPost(canvas);
     }
 
@@ -205,7 +173,7 @@ public class MainFragment extends Fragment
             return;
         }
         canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-        if(faceBmp != null && !faceBmp.isRecycled()){
+        if (faceBmp != null && !faceBmp.isRecycled()) {
             canvas.drawBitmap(faceBmp, 0, 0, mFaceRectPaint);
         }
 
@@ -215,41 +183,26 @@ public class MainFragment extends Fragment
     @Override
     public void toastMessage(String msg) {
         if (!TextUtils.isEmpty(msg)) {
-
+            Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
     public void showCameraUnavailableDialog(int errorCode) {
-        if(mCameraUnavailableDialog == null) {
-            mCameraUnavailableDialog = new AlertDialog.Builder(getActivity())
-                    .setTitle("摄像头不可用")
-                    .setMessage(getContext().getString(R.string.please_restart_device_or_app, errorCode))
-                    .setPositiveButton("重试", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    getActivity().recreate();
-                                }
-                            });
-                        }
-                    })
-                    .setNegativeButton("退出", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    getActivity().finish();
-                                }
-                            });
-                        }
-                    })
-                    .create();
+        if (mCameraUnavailableDialog == null) {
+            mCameraUnavailableDialog = new AlertDialog.Builder(getActivity()).setTitle("摄像头不可用").setMessage(getContext().getString(R.string.please_restart_device_or_app, errorCode)).setPositiveButton("重试", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    getActivity().runOnUiThread(() -> getActivity().recreate());
+                }
+            }).setNegativeButton("退出", (dialog, which) -> getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    getActivity().finish();
+                }
+            })).create();
         }
-        if(!mCameraUnavailableDialog.isShowing()) {
+        if (!mCameraUnavailableDialog.isShowing()) {
             mCameraUnavailableDialog.show();
         }
     }
@@ -273,32 +226,26 @@ public class MainFragment extends Fragment
             return;
         }
         mOverlapHolder.unlockCanvasAndPost(canvas);
-
         //显示识别结果
         txtTips.setText(name);
     }
 
     @Override
-    public void showSimpleTip(String tip)
-    {
+    public void showSimpleTip(String tip) {
         needFaceRegister = false;
         registeredName = "";
         Toast.makeText(getContext(), tip, Toast.LENGTH_LONG).show();
     }
-    @Override
-    public void FaceRegister(String tip)
-    {
 
+    @Override
+    public void FaceRegister(String tip) {
         needFaceRegister = false;
         registeredName = "";
-
-//        txtTips.setText(tip);
         //提示注册成功
         Toast.makeText(getContext(), tip, Toast.LENGTH_LONG).show();
         //还原EditView
         edit_name.setText("");
         edit_name.setHint("enter name");
-        //edit_name.setFocusable(false);
     }
 
     @Override
@@ -316,10 +263,6 @@ public class MainFragment extends Fragment
         return getView() != null && isAdded() && !isDetached();
     }
 
-    @Override
-    public TextureView getTextureView() {
-        return mCameraPreview;
-    }
 
     @Override
     public void onDestroyView() {
@@ -329,14 +272,12 @@ public class MainFragment extends Fragment
 
     @SuppressWarnings("unused")
     private void requestCameraPermission() {
-            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.CAMERA},
-                    REQUEST_CAMERA_PERMISSION);
+        ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if(requestCode == REQUEST_CAMERA_PERMISSION) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
             getActivity().recreate();
         }
     }

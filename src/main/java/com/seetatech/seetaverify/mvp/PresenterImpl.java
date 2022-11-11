@@ -166,6 +166,8 @@ public class PresenterImpl implements VerificationContract.Presenter {
                 trackingInfo.faceRect.height = faces[maxIndex].height;
                 trackingInfo.lastProccessTime = System.currentTimeMillis();
 
+                mView.drawFaceRect(trackingInfo.faceRect);
+
                 int limitX = trackingInfo.faceRect.x + trackingInfo.faceRect.width;
                 int limitY = trackingInfo.faceRect.y + trackingInfo.faceRect.height;
                 if (limitX < WIDTH && limitY < HEIGHT) {
@@ -282,11 +284,9 @@ public class PresenterImpl implements VerificationContract.Presenter {
     public void saveImage(Mat bgr, String path, String imageName) {
         Mat rgba = bgr.clone();
         Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_BGR2RGBA);
-
         Bitmap mBitmap = null;
         mBitmap = Bitmap.createBitmap(rgba.cols(), rgba.rows(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(rgba, mBitmap);
-
         File f = new File(path, imageName);
         if (f.exists()) {
             f.delete();

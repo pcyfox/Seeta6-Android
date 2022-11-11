@@ -1,7 +1,6 @@
 package com.seeta.sdk;
 
 public class SeetaModelSetting {
-
     public SeetaDevice device;
     public int id;     // when device is GPU, id means GPU id
     public String[] model;

@@ -1,18 +1,21 @@
 package com.seeta.sdk;
 
 public class FaceLandmarker {
-    static{
+    static {
         System.loadLibrary("SeetaFaceLandmarker600_java");
     }
 
     public long impl = 0;
+
     private native void construct(SeetaModelSetting seeting);
-    public FaceLandmarker(SeetaModelSetting setting){
+
+    public FaceLandmarker(SeetaModelSetting setting) {
         this.construct(setting);
     }
 
     public native void dispose();
-    protected void finalize()throws Throwable{
+
+    protected void finalize() throws Throwable {
         super.finalize();
         this.dispose();
     }

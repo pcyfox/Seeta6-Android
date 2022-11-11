@@ -45,13 +45,11 @@ public class PresenterImpl implements VerificationContract.Presenter {
     }
 
     private static final String TAG = "PresenterImpl";
-
-    private VerificationContract.View mView;
-
+    private final VerificationContract.View mView;
     public static FaceDetector faceDetector = null;
 
-    private static int WIDTH = AppConfig.IMAGE_WIDTH;
-    private static int HEIGHT = AppConfig.IMAGE_HEIGHT;
+    private static final int WIDTH = AppConfig.IMAGE_WIDTH;
+    private static final int HEIGHT = AppConfig.IMAGE_HEIGHT;
     public SeetaImageData imageData = new SeetaImageData(WIDTH, HEIGHT, 3);
 
     private float thresh = 0.70f;
@@ -72,8 +70,8 @@ public class PresenterImpl implements VerificationContract.Presenter {
         public static Map<String, float[]> name2feats = new HashMap<>();
     }
 
-    private HandlerThread mFaceTrackThread;
-    private HandlerThread mFasThread;
+    private final HandlerThread mFaceTrackThread;
+    private final HandlerThread mFasThread;
 
     {
         mFaceTrackThread = new HandlerThread("FaceTrackThread", Process.THREAD_PRIORITY_MORE_FAVORABLE);
@@ -118,16 +116,14 @@ public class PresenterImpl implements VerificationContract.Presenter {
             }
             faceDetector.set(Property.PROPERTY_MIN_FACE_SIZE, 80);
         } catch (Exception e) {
-            Log.e(TAG, "init exception:" + e.toString());
+            Log.e(TAG, "init exception:" + e);
         }
 
     }
 
     public boolean isExists(String path, String modelName) {
         File file = new File(path + "/" + modelName);
-        if (file.exists()) return true;
-
-        return false;
+        return file.exists();
     }
 
     public static File getInternalCacheDirectory(Context context, String type) {
@@ -144,25 +140,19 @@ public class PresenterImpl implements VerificationContract.Presenter {
         return appCacheDir;
     }
 
-    private Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
+    private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
         @Override
         public void handleMessage(Message msg) {
-
-            long t = System.currentTimeMillis();
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
-
             trackingInfo.matBgr.get(0, 0, imageData.data);
 
-
             SeetaRect[] faces = faceDetector.Detect(imageData);
-
             trackingInfo.faceInfo.x = (int) 0;
             trackingInfo.faceInfo.y = 0;
             trackingInfo.faceInfo.width = 0;
             trackingInfo.faceInfo.height = 0;
 
             if (faces.length != 0) {
-
                 int maxIndex = 0;
                 double maxWidth = 0;
                 for (int i = 0; i < faces.length; ++i) {
@@ -173,11 +163,10 @@ public class PresenterImpl implements VerificationContract.Presenter {
                 }
 
                 trackingInfo.faceInfo = faces[maxIndex];
-
-                trackingInfo.faceRect.x = (int) faces[maxIndex].x;
-                trackingInfo.faceRect.y = (int) faces[maxIndex].y;
-                trackingInfo.faceRect.width = (int) faces[maxIndex].width;
-                trackingInfo.faceRect.height = (int) faces[maxIndex].height;
+                trackingInfo.faceRect.x = faces[maxIndex].x;
+                trackingInfo.faceRect.y = faces[maxIndex].y;
+                trackingInfo.faceRect.width = faces[maxIndex].width;
+                trackingInfo.faceRect.height = faces[maxIndex].height;
                 trackingInfo.lastProccessTime = System.currentTimeMillis();
 
                 int limitX = trackingInfo.faceRect.x + trackingInfo.faceRect.width;
@@ -198,17 +187,11 @@ public class PresenterImpl implements VerificationContract.Presenter {
 
             } else {
                 mView.drawFaceRect(null);
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-//                        mView.setStatus(0, null, null);
-                    }
-                });
             }
         }
     };
 
-    private Handler mFasHandler = new Handler(mFasThread.getLooper()) {
+    private final Handler mFasHandler = new Handler(mFasThread.getLooper()) {
 
         @Override
         public void handleMessage(Message msg) {
@@ -222,39 +205,25 @@ public class PresenterImpl implements VerificationContract.Presenter {
             //注册人脸
             MainFragment mainFragment = (MainFragment) mView;
             if (mainFragment.needFaceRegister) {
-                String registeredName = "";
                 boolean canRegister = true;
                 float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
-
                 if (trackingInfo.faceInfo.width != 0) {
                     //特征点检测
                     SeetaPointF[] points = new SeetaPointF[5];
                     faceLandmarker.mark(imageData, trackingInfo.faceInfo, points);
-
                     //特征提取
                     faceRecognizer.Extract(imageData, points, feats);
-
                     if ("".equals(mainFragment.registeredName)) {
                         canRegister = false;
                         final String tip = "注册名称不能为空";
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                mView.showSimpleTip(tip);
-                            }
-                        });
+                        new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
                     }
 
                     for (String key : trackingInfo.name2feats.keySet()) {
                         if (key.equals(mainFragment.registeredName)) {
                             canRegister = false;
                             final String tip = mainFragment.registeredName + "已经注册";
-                            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mView.showSimpleTip(tip);
-                                }
-                            });
+                            new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
                         }
                     }
                 }
@@ -263,12 +232,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
                 if (canRegister) {
                     trackingInfo.name2feats.put(mainFragment.registeredName, feats);
                     final String tip = mainFragment.registeredName + "名称已经注册成功";
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mView.FaceRegister(tip);
-                        }
-                    });
+                    new Handler(Looper.getMainLooper()).post(() -> mView.FaceRegister(tip));
                 }
             }
 
@@ -282,10 +246,8 @@ public class PresenterImpl implements VerificationContract.Presenter {
                 if (!trackingInfo.name2feats.isEmpty()) {//不空进行特征提取，并比对
                     float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
                     faceRecognizer.Extract(imageData, points, feats);
-
                     int galleryNum = trackingInfo.name2feats.size();
                     float maxSimilarity = 0.0f;
-
                     for (String name : trackingInfo.name2feats.keySet()) {
                         float sim = faceRecognizer.CalculateSimilarity(feats, trackingInfo.name2feats.get(name));
                         if (sim > maxSimilarity && sim > thresh) {
@@ -298,19 +260,13 @@ public class PresenterImpl implements VerificationContract.Presenter {
 
             final String pickedName = targetName;
             Log.e("recognized name:", pickedName);
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    mView.setName(pickedName, trackingInfo.matBgr, faceRect);
-                }
-            });
+            new Handler(Looper.getMainLooper()).post(() -> mView.setName(pickedName, trackingInfo.matBgr, faceRect));
         }
     };
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
         TrackingInfo trackingInfo = new TrackingInfo();
-
         matNv21.put(0, 0, data);
         trackingInfo.matBgr = new Mat(AppConfig.CAMERA_PREVIEW_HEIGHT, AppConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
         trackingInfo.matGray = new Mat();
@@ -330,7 +286,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();
     }
 
-    public void saveImgage(Mat bgr, String path, String imageName) {
+    public void saveImage(Mat bgr, String path, String imageName) {
         Mat rgba = bgr.clone();
         Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_BGR2RGBA);
 
@@ -348,11 +304,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
             out.flush();
             out.close();
             Log.i(TAG, "已经保存");
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

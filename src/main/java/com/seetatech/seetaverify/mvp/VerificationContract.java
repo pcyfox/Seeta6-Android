@@ -30,7 +30,7 @@ public interface VerificationContract {
 
         void setPresenter(Presenter presenter);
 
-        TextureView getTextureView();
+
         boolean isActive();
     }
 

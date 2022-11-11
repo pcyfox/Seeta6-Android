@@ -1,18 +1,14 @@
 package com.seeta.sdk;
 
 
-//import com.seeta.SeetaModelSetting;
 
 
 public class FaceRecognizer {
-
     static {
         System.loadLibrary("SeetaFaceRecognizer600_java");
     }
 
-
     public long impl = 0;
-
     private native void construct(SeetaModelSetting setting);
     public FaceRecognizer(SeetaModelSetting setting) {
         this.construct(setting);

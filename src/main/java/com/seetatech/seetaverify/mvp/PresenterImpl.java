@@ -55,16 +55,13 @@ public class PresenterImpl implements VerificationContract.Presenter {
     private float thresh = 0.70f;
 
     public static FaceLandmarker faceLandmarker = null;
-
     public static FaceRecognizer faceRecognizer = null;
 
     public static class TrackingInfo {
-        public int personId;
         public Mat matBgr;
         public Mat matGray;
         public SeetaRect faceInfo = new SeetaRect();
         public Rect faceRect = new Rect();
-        public float score;
         public long birthTime;
         public long lastProccessTime;
         public static Map<String, float[]> name2feats = new HashMap<>();
@@ -179,7 +176,6 @@ public class PresenterImpl implements VerificationContract.Presenter {
                     Bitmap faceBmp = Bitmap.createBitmap(faceMatBGR.width(), faceMatBGR.height(), Bitmap.Config.ARGB_8888);
                     Utils.matToBitmap(faceMatBGRA, faceBmp);
                     mView.drawFaceImage(faceBmp);
-
                 }
 
                 mFasHandler.removeMessages(0);
@@ -199,9 +195,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
             trackingInfo.matGray = new Mat();
             final Rect faceRect = trackingInfo.faceRect;
             trackingInfo.matBgr.get(0, 0, imageData.data);
-
             String targetName = "unknown";
-
             //注册人脸
             MainFragment mainFragment = (MainFragment) mView;
             if (mainFragment.needFaceRegister) {
@@ -218,7 +212,6 @@ public class PresenterImpl implements VerificationContract.Presenter {
                         final String tip = "注册名称不能为空";
                         new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
                     }
-
                     for (String key : trackingInfo.name2feats.keySet()) {
                         if (key.equals(mainFragment.registeredName)) {
                             canRegister = false;

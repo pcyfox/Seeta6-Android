@@ -1,8 +1,15 @@
 package com.df.lib_seete6.utils;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
+
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,6 +25,45 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class FileUtils {
+
+    public static void saveImage(Mat bgr, String path, String imageName) {
+        Mat rgba = bgr.clone();
+        Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_BGR2RGBA);
+        Bitmap mBitmap = null;
+        mBitmap = Bitmap.createBitmap(rgba.cols(), rgba.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(rgba, mBitmap);
+        File f = new File(path, imageName);
+        if (f.exists()) {
+            f.delete();
+        }
+        try {
+            FileOutputStream out = new FileOutputStream(f);
+            mBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean isExists(String path, String modelName) {
+        File file = new File(path + "/" + modelName);
+        return file.exists();
+    }
+
+    public static File getInternalCacheDirectory(Context context, String type) {
+        File appCacheDir = null;
+        if (TextUtils.isEmpty(type)) {
+            appCacheDir = context.getCacheDir();// /data/data/app_package_name/cache
+        } else {
+            appCacheDir = new File(context.getFilesDir(), type);// /data/data/app_package_name/files/type
+        }
+
+        if (!appCacheDir.exists() && !appCacheDir.mkdirs()) {
+            Log.e("getInternalDirectory", "getInternalDirectory fail ,the reason is make directory fail !");
+        }
+        return appCacheDir;
+    }
 
     public static void copyFromAsset(Context context, String fileName, File dst, boolean overwrite) {
         if (!dst.exists() || overwrite) {
@@ -50,10 +96,10 @@ public class FileUtils {
     }
 
     @Nullable
-    public static void putConfigFile(HashMap<String,String> hashMap, File configFile) {
+    public static void putConfigFile(HashMap<String, String> hashMap, File configFile) {
 
         try {
-            if ( !configFile.exists() ){
+            if (!configFile.exists()) {
                 configFile.createNewFile();
             }
             Iterator iterator = hashMap.entrySet().iterator();
@@ -65,8 +111,8 @@ public class FileUtils {
                 sb.append(kv.trim());
                 sb.append("\n");
             }
-            OutputStreamWriter write = new OutputStreamWriter(new FileOutputStream(configFile),"UTF-8");
-            BufferedWriter writer=new BufferedWriter(write);
+            OutputStreamWriter write = new OutputStreamWriter(new FileOutputStream(configFile), "UTF-8");
+            BufferedWriter writer = new BufferedWriter(write);
             writer.write(sb.toString());
             writer.close();
         } catch (Exception e) {

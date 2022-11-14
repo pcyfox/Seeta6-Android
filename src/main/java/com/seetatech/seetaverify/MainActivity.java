@@ -1,6 +1,5 @@
 package com.seetatech.seetaverify;
 
-import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 
@@ -10,8 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
+import com.df.lib_seete6.utils.EnginHelper;
 import com.seetatech.seetaverify.mvp.MainFragment;
-import com.df.lib_seete6.PresenterImpl;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -21,10 +20,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate");
+        initFaceEngin();
         setContentView(R.layout.activity_main);
-        Fragment fragment = FragmentFactory.create(this);
+        Fragment fragment = new MainFragment();
         getSupportFragmentManager().beginTransaction().replace(android.R.id.content, fragment).commitNow();
         this.setFinishOnTouchOutside(false);
+    }
+
+    private void initFaceEngin() {
+        new Thread(() -> {
+        }).start();
     }
 
     @Override
@@ -55,11 +60,4 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "onConfigurationChanged");
     }
 
-    private static class FragmentFactory {
-        public static Fragment create(Context context) {
-            MainFragment fragment = new MainFragment();
-            new PresenterImpl(context, fragment, true);
-            return fragment;
-        }
-    }
 }

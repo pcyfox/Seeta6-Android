@@ -1,24 +1,19 @@
 package com.df.lib_seete6;
 
-import android.content.Context;
+
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.df.lib_seete6.config.AppConfig;
-import com.df.lib_seete6.utils.FileUtils;
+import com.df.lib_seete6.utils.EnginHelper;
 import com.seeta.sdk.FaceAntiSpoofing;
-import com.seeta.sdk.FaceDetector;
-import com.seeta.sdk.FaceLandmarker;
 import com.seeta.sdk.FaceRecognizer;
-import com.seeta.sdk.Property;
 import com.seeta.sdk.SeetaImageData;
-import com.seeta.sdk.SeetaModelSetting;
 import com.seeta.sdk.SeetaPointF;
 import com.seeta.sdk.SeetaRect;
 
@@ -30,32 +25,19 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class PresenterImpl implements Contract.Presenter {
 
-    static {
-        System.loadLibrary("opencv_java3");
-    }
-
     private static final String TAG = "PresenterImpl";
     private Contract.View mView;
 
     private static final int WIDTH = AppConfig.IMAGE_WIDTH;
     private static final int HEIGHT = AppConfig.IMAGE_HEIGHT;
+
     public SeetaImageData imageData = new SeetaImageData(WIDTH, HEIGHT, 3);
-
-    public static FaceDetector faceDetector = null;
-    public static FaceLandmarker faceLandmarker = null;
-    public static FaceRecognizer faceRecognizer = null;
-    public static FaceAntiSpoofing faceAntiSpoofing = null;
-
-    FaceAntiSpoofing.Status state = FaceAntiSpoofing.Status.DETECTING;//初始状态
 
     private boolean needFaceRegister;
     private String registeredName;
@@ -80,105 +62,19 @@ public class PresenterImpl implements Contract.Presenter {
         mFasThread.start();
     }
 
-    private final Mat matNv21 = new Mat(AppConfig.CAMERA_PREVIEW_HEIGHT + AppConfig.CAMERA_PREVIEW_HEIGHT / 2, AppConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
 
-    public PresenterImpl(Context context, Contract.View view, boolean needCheckSpoofing) {
+    public PresenterImpl(Contract.View view) {
         mView = view;
         mView.setPresenter(this);
-        String faceModelPath = getInternalCacheDirectory(context, "face").getAbsolutePath();
-        String fasModelPath = getInternalCacheDirectory(context, "fas").getAbsolutePath();
-        Log.d("cacheDir", "" + faceModelPath);
-
-        String fdModel = "face_detector.csta";
-        String pdModel = "face_landmarker_pts5.csta";
-        String frModel = "face_recognizer.csta";
-
-        String fasModel1 = "fas_first.csta";
-        String fasModel2 = "fas_second.csta";
-
-
-        if (!isExists(faceModelPath, fdModel)) {
-            File fdFile = new File(faceModelPath + "/" + fdModel);
-            FileUtils.copyFromAsset(context, fdModel, fdFile, false);
-        }
-        if (!isExists(faceModelPath, pdModel)) {
-            File pdFile = new File(faceModelPath + "/" + pdModel);
-            FileUtils.copyFromAsset(context, pdModel, pdFile, false);
-        }
-        if (!isExists(faceModelPath, frModel)) {
-            File frFile = new File(faceModelPath + "/" + frModel);
-            FileUtils.copyFromAsset(context, frModel, frFile, false);
-        }
-
-        if (!isExists(fasModelPath, fasModel1)) {
-            File fasModel1File = new File(fasModelPath + "/" + fasModel1);
-            FileUtils.copyFromAsset(context, fasModel1, fasModel1File, false);
-        }
-
-        if (!isExists(fasModelPath, fasModel2)) {
-            File fasModel2FIle = new File(fasModelPath + "/" + fasModel2);
-            FileUtils.copyFromAsset(context, fasModel2, fasModel2FIle, false);
-        }
-
-        File faceModelPathFile = new File(faceModelPath);
-        String[] faceModels = faceModelPathFile.list();
-        if (faceModels == null || faceModels.length == 0) {
-            Log.e(TAG, "PresenterImpl() init fail,can't find face models");
-            return;
-        }
-
-        try {
-            String rootPath = faceModelPath + "/";
-            if (faceDetector == null || faceLandmarker == null || faceRecognizer == null) {
-                faceDetector = new FaceDetector(new SeetaModelSetting(new String[]{rootPath + fdModel}));
-                faceLandmarker = new FaceLandmarker(new SeetaModelSetting(new String[]{rootPath + pdModel}));
-                faceRecognizer = new FaceRecognizer(new SeetaModelSetting(new String[]{rootPath + frModel}));
-            }
-            faceDetector.set(Property.PROPERTY_MIN_FACE_SIZE, AppConfig.MIN_FACE_SIZE);
-
-            if (faceAntiSpoofing == null && needCheckSpoofing) {
-                File fasModelPathFile = new File(fasModelPath);
-                String[] fasModels = fasModelPathFile.list();
-                if (fasModels == null || fasModels.length == 0) {
-                    Log.e(TAG, "PresenterImpl() init fail,can't find fas models");
-                    return;
-                }
-                rootPath = fasModelPath + "/";
-                faceAntiSpoofing = new FaceAntiSpoofing(new SeetaModelSetting(new String[]{rootPath + fasModel1, rootPath + fasModel2}));
-                faceAntiSpoofing.SetThreshold(AppConfig.FAS_CLARITY, AppConfig.FAS_THRESH);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "init exception:" + e);
-        }
     }
 
-
-    public boolean isExists(String path, String modelName) {
-        File file = new File(path + "/" + modelName);
-        return file.exists();
-    }
-
-
-    public static File getInternalCacheDirectory(Context context, String type) {
-        File appCacheDir = null;
-        if (TextUtils.isEmpty(type)) {
-            appCacheDir = context.getCacheDir();// /data/data/app_package_name/cache
-        } else {
-            appCacheDir = new File(context.getFilesDir(), type);// /data/data/app_package_name/files/type
-        }
-
-        if (!appCacheDir.exists() && !appCacheDir.mkdirs()) {
-            Log.e("getInternalDirectory", "getInternalDirectory fail ,the reason is make directory fail !");
-        }
-        return appCacheDir;
-    }
 
     private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
         @Override
         public void handleMessage(Message msg) {
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
             trackingInfo.matBgr.get(0, 0, imageData.data);
-            SeetaRect[] faces = faceDetector.Detect(imageData);
+            SeetaRect[] faces = EnginHelper.getInstance().getFaceDetector().Detect(imageData);
             if (faces.length == 0) {
                 mView.drawFaceRect(null);
                 return;
@@ -241,12 +137,14 @@ public class PresenterImpl implements Contract.Presenter {
             }
             //进行人脸识别
             float maxSimilarity = 0.0f;
+            FaceAntiSpoofing.Status faceAntiSpoofingState = FaceAntiSpoofing.Status.DETECTING;//初始状态
             if (faceInfo.width != 0) {
                 //特征点检测
                 SeetaPointF[] points = new SeetaPointF[5];
-                faceLandmarker.mark(imageData, faceInfo, points);
+                EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
                 //特征提取
                 if (!TrackingInfo.name2feats.isEmpty()) {//不空进行特征提取，并比对
+                    FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
                     float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
                     faceRecognizer.Extract(imageData, points, feats);
                     for (String name : TrackingInfo.name2feats.keySet()) {
@@ -255,8 +153,9 @@ public class PresenterImpl implements Contract.Presenter {
                             maxSimilarity = sim;
                             targetName = name;
                             //活体检测
+                            FaceAntiSpoofing faceAntiSpoofing = EnginHelper.getInstance().getFaceAntiSpoofing();
                             if (faceAntiSpoofing != null) {
-                                state = faceAntiSpoofing.Predict(imageData, faceInfo, points);
+                                faceAntiSpoofingState = faceAntiSpoofing.Predict(imageData, faceInfo, points);
                             }
                         }
                     }
@@ -265,20 +164,22 @@ public class PresenterImpl implements Contract.Presenter {
 
             final String pickedName = targetName;
             final float similarity = maxSimilarity;
-            new Handler(Looper.getMainLooper()).post(() -> mView.onDetectFinish(state, similarity, pickedName, trackingInfo.matBgr, faceRect));
+            final FaceAntiSpoofing.Status status = faceAntiSpoofingState;
+            new Handler(Looper.getMainLooper()).post(() -> mView.onDetectFinish(status, similarity, pickedName, trackingInfo.matBgr, faceRect));
         }
     };
 
 
     private boolean startRegister(SeetaRect faceInfo) {
         boolean canRegister = true;
+        FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
         float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
         if (faceInfo.width == 0) {
             return false;
         }
         //特征点检测
         SeetaPointF[] points = new SeetaPointF[5];
-        faceLandmarker.mark(imageData, faceInfo, points);
+        EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
         //特征提取
         faceRecognizer.Extract(imageData, points, feats);
         if ("".equals(registeredName)) {
@@ -306,11 +207,15 @@ public class PresenterImpl implements Contract.Presenter {
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
+        if (!EnginHelper.getInstance().isInitOver()) {
+            Log.d(TAG, "detect() called fail,engin is  not init!");
+            return;
+        }
         TrackingInfo trackingInfo = new TrackingInfo();
-        matNv21.put(0, 0, data);
+        EnginHelper.matNv21.put(0, 0, data);
         trackingInfo.matBgr = new Mat(AppConfig.CAMERA_PREVIEW_HEIGHT, AppConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
         trackingInfo.matGray = new Mat();
-        Imgproc.cvtColor(matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
+        Imgproc.cvtColor(EnginHelper.matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 
         Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);
         Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
@@ -322,27 +227,6 @@ public class PresenterImpl implements Contract.Presenter {
 
         mFaceTrackingHandler.removeMessages(1);
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();
-    }
-
-    public void saveImage(Mat bgr, String path, String imageName) {
-        Mat rgba = bgr.clone();
-        Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_BGR2RGBA);
-        Bitmap mBitmap = null;
-        mBitmap = Bitmap.createBitmap(rgba.cols(), rgba.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(rgba, mBitmap);
-        File f = new File(path, imageName);
-        if (f.exists()) {
-            f.delete();
-        }
-        try {
-            FileOutputStream out = new FileOutputStream(f);
-            mBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-            out.flush();
-            out.close();
-            Log.i(TAG, "已经保存");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override

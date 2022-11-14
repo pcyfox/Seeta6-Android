@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.df.lib_seete6.utils.CachedImage;
+import com.df.lib_seete6.utils.EnginHelper;
 
 public class LaunchActivity extends AppCompatActivity {
 
@@ -21,9 +22,8 @@ public class LaunchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
-        imageView = (ImageView) findViewById(R.id.best_image);
-        tvSilentScore = (TextView) findViewById(R.id.silentScore);
-
+        imageView = findViewById(R.id.best_image);
+        tvSilentScore = findViewById(R.id.silentScore);
         this.setFinishOnTouchOutside(false);
     }
 
@@ -32,6 +32,7 @@ public class LaunchActivity extends AppCompatActivity {
         tvSilentScore.setText("");
         startActivityForResult(new Intent(this, MainActivity.class), 1);
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

@@ -31,6 +31,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import com.df.lib_seete6.Contract;
+import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview2;
 import com.seeta.sdk.FaceAntiSpoofing;
@@ -109,6 +110,8 @@ public class MainFragment extends Fragment implements Contract.View {
         mFaceNamePaint.setColor(Color.argb(150, 0, 255, 0));
         mFaceNamePaint.setTextSize(50);
         mFaceNamePaint.setStyle(Paint.Style.FILL);
+
+        mPresenter = new PresenterImpl(this);
     }
 
     @Nullable
@@ -220,8 +223,7 @@ public class MainFragment extends Fragment implements Contract.View {
         if (!isActive()) {
             return;
         }
-        switch (status)
-        {
+        switch (status) {
             case DETECTING:
                 tvfacestatus.setText("没有人脸");
                 break;

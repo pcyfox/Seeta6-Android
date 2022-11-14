@@ -45,14 +45,13 @@ public class PresenterImpl implements Contract.Presenter {
     }
 
     private static final String TAG = "PresenterImpl";
-    private final Contract.View mView;
-    public static FaceDetector faceDetector = null;
+    private Contract.View mView;
 
     private static final int WIDTH = AppConfig.IMAGE_WIDTH;
     private static final int HEIGHT = AppConfig.IMAGE_HEIGHT;
     public SeetaImageData imageData = new SeetaImageData(WIDTH, HEIGHT, 3);
 
-
+    public static FaceDetector faceDetector = null;
     public static FaceLandmarker faceLandmarker = null;
     public static FaceRecognizer faceRecognizer = null;
 
@@ -65,7 +64,7 @@ public class PresenterImpl implements Contract.Presenter {
         public SeetaRect faceInfo = new SeetaRect();
         public Rect faceRect = new Rect();
         public long birthTime;
-        public long lastProccessTime;
+        public long lastProcessTime;
         public static Map<String, float[]> name2feats = new HashMap<>();
     }
 
@@ -149,50 +148,49 @@ public class PresenterImpl implements Contract.Presenter {
         public void handleMessage(Message msg) {
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
             trackingInfo.matBgr.get(0, 0, imageData.data);
-
             SeetaRect[] faces = faceDetector.Detect(imageData);
-            trackingInfo.faceInfo.x = (int) 0;
+            if (faces.length == 0) {
+                mView.drawFaceRect(null);
+                return;
+            }
+
+            trackingInfo.faceInfo.x = 0;
             trackingInfo.faceInfo.y = 0;
             trackingInfo.faceInfo.width = 0;
             trackingInfo.faceInfo.height = 0;
 
-            if (faces.length != 0) {
-                int maxIndex = 0;
-                double maxWidth = 0;
-                for (int i = 0; i < faces.length; ++i) {
-                    if (faces[i].width > maxWidth) {
-                        maxIndex = i;
-                        maxWidth = faces[i].width;
-                    }
+            int maxIndex = 0;
+            double maxWidth = 0;
+            for (int i = 0; i < faces.length; ++i) {
+                if (faces[i].width > maxWidth) {
+                    maxIndex = i;
+                    maxWidth = faces[i].width;
                 }
-
-                trackingInfo.faceInfo = faces[maxIndex];
-                trackingInfo.faceRect.x = faces[maxIndex].x;
-                trackingInfo.faceRect.y = faces[maxIndex].y;
-                trackingInfo.faceRect.width = faces[maxIndex].width;
-                trackingInfo.faceRect.height = faces[maxIndex].height;
-                trackingInfo.lastProccessTime = System.currentTimeMillis();
-
-                mView.drawFaceRect(trackingInfo.faceRect);
-
-                int limitX = trackingInfo.faceRect.x + trackingInfo.faceRect.width;
-                int limitY = trackingInfo.faceRect.y + trackingInfo.faceRect.height;
-                if (limitX < WIDTH && limitY < HEIGHT) {
-                    Mat faceMatBGR = new Mat(trackingInfo.matBgr, trackingInfo.faceRect);
-                    Imgproc.resize(faceMatBGR, faceMatBGR, new Size(200, 240));
-                    Mat faceMatBGRA = new Mat();
-                    Imgproc.cvtColor(faceMatBGR, faceMatBGRA, Imgproc.COLOR_BGR2RGBA);
-                    Bitmap faceBmp = Bitmap.createBitmap(faceMatBGR.width(), faceMatBGR.height(), Bitmap.Config.ARGB_8888);
-                    Utils.matToBitmap(faceMatBGRA, faceBmp);
-                    mView.drawFaceImage(faceBmp);
-                }
-
-                mFasHandler.removeMessages(0);
-                mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
-
-            } else {
-                mView.drawFaceRect(null);
             }
+
+            trackingInfo.faceInfo = faces[maxIndex];
+            trackingInfo.faceRect.x = faces[maxIndex].x;
+            trackingInfo.faceRect.y = faces[maxIndex].y;
+            trackingInfo.faceRect.width = faces[maxIndex].width;
+            trackingInfo.faceRect.height = faces[maxIndex].height;
+            trackingInfo.lastProcessTime = System.currentTimeMillis();
+
+            mView.drawFaceRect(trackingInfo.faceRect);
+
+            int limitX = trackingInfo.faceRect.x + trackingInfo.faceRect.width;
+            int limitY = trackingInfo.faceRect.y + trackingInfo.faceRect.height;
+            if (limitX < WIDTH && limitY < HEIGHT) {
+                Mat faceMatBGR = new Mat(trackingInfo.matBgr, trackingInfo.faceRect);
+                Imgproc.resize(faceMatBGR, faceMatBGR, new Size(200, 240));
+                Mat faceMatBGRA = new Mat();
+                Imgproc.cvtColor(faceMatBGR, faceMatBGRA, Imgproc.COLOR_BGR2RGBA);
+                Bitmap faceBmp = Bitmap.createBitmap(faceMatBGR.width(), faceMatBGR.height(), Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(faceMatBGRA, faceBmp);
+                mView.drawFaceImage(faceBmp);
+            }
+
+            mFasHandler.removeMessages(0);
+            mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
         }
     };
 
@@ -207,7 +205,7 @@ public class PresenterImpl implements Contract.Presenter {
             String targetName = "unknown";
             //注册人脸
             if (needFaceRegister) {
-                startRegister(trackingInfo);
+                startRegister(trackingInfo.faceInfo);
             }
             //进行人脸识别
             float maxSimilarity = 0.0f;
@@ -230,42 +228,42 @@ public class PresenterImpl implements Contract.Presenter {
             }
             final String pickedName = targetName;
             final float similarity = maxSimilarity;
-
             new Handler(Looper.getMainLooper()).post(() -> mView.onDetectFinish(similarity, pickedName, trackingInfo.matBgr, faceRect));
         }
     };
 
-    private void startRegister(TrackingInfo trackingInfo) {
+    private boolean startRegister(SeetaRect faceInfo) {
         boolean canRegister = true;
         float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
-        if (trackingInfo.faceInfo.width != 0) {
-            //特征点检测
-            SeetaPointF[] points = new SeetaPointF[5];
-            faceLandmarker.mark(imageData, trackingInfo.faceInfo, points);
-            //特征提取
-            faceRecognizer.Extract(imageData, points, feats);
-            if ("".equals(registeredName)) {
+        if (faceInfo.width == 0) {
+            return false;
+        }
+        //特征点检测
+        SeetaPointF[] points = new SeetaPointF[5];
+        faceLandmarker.mark(imageData, faceInfo, points);
+        //特征提取
+        faceRecognizer.Extract(imageData, points, feats);
+        if ("".equals(registeredName)) {
+            canRegister = false;
+            final String tip = "注册名称不能为空";
+            new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
+        }
+        for (String key : TrackingInfo.name2feats.keySet()) {
+            if (key.equals(registeredName)) {
+                needFaceRegister = false;
                 canRegister = false;
-                final String tip = "注册名称不能为空";
+                final String tip = registeredName + ",已经注册";
                 new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
             }
-            for (String key : TrackingInfo.name2feats.keySet()) {
-                if (key.equals(registeredName)) {
-                    needFaceRegister = false;
-                    canRegister = false;
-                    final String tip = registeredName + "已经注册";
-                    new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
-                }
-            }
         }
-
         //进行人脸的注册
         if (canRegister) {
             needFaceRegister = false;
             TrackingInfo.name2feats.put(registeredName, feats);
-            final String tip = registeredName + "名称已经注册成功";
+            final String tip = registeredName + ",已经注册成功";
             new Handler(Looper.getMainLooper()).post(() -> mView.FaceRegister(tip));
         }
+        return canRegister;
     }
 
     @Override
@@ -282,7 +280,7 @@ public class PresenterImpl implements Contract.Presenter {
 
         Imgproc.cvtColor(trackingInfo.matBgr, trackingInfo.matGray, Imgproc.COLOR_BGR2GRAY);
         trackingInfo.birthTime = System.currentTimeMillis();
-        trackingInfo.lastProccessTime = System.currentTimeMillis();
+        trackingInfo.lastProcessTime = System.currentTimeMillis();
 
         mFaceTrackingHandler.removeMessages(1);
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();
@@ -320,5 +318,6 @@ public class PresenterImpl implements Contract.Presenter {
     public void destroy() {
         mFaceTrackThread.quitSafely();
         mFasThread.quitSafely();
+        mView = null;
     }
 }

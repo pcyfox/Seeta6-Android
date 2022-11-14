@@ -225,7 +225,7 @@ public class MainFragment extends Fragment implements Contract.View {
         }
         switch (status) {
             case DETECTING:
-                tvfacestatus.setText("没有人脸");
+                tvfacestatus.setText("检测中");
                 break;
             case REAL:
                 tvfacestatus.setText("真人脸");

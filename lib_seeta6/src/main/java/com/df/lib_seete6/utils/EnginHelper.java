@@ -113,7 +113,7 @@ public class EnginHelper {
         File faceModelPathFile = new File(faceModelPath);
         String[] faceModels = faceModelPathFile.list();
         if (faceModels == null || faceModels.length == 0) {
-            Log.e(TAG, "PresenterImpl() init fail,can't find face models");
+            Log.e(TAG, "init fail,can't find face models");
             return;
         }
 
@@ -130,7 +130,7 @@ public class EnginHelper {
                 File fasModelPathFile = new File(fasModelPath);
                 String[] fasModels = fasModelPathFile.list();
                 if (fasModels == null || fasModels.length == 0) {
-                    Log.e(TAG, "PresenterImpl() init fail,can't find fas models");
+                    Log.e(TAG, "init fail,can't find fas models");
                     return;
                 }
                 rootPath = fasModelPath + "/";

@@ -6,7 +6,7 @@ import static com.df.lib_seete6.utils.FileUtils.isExists;
 import android.content.Context;
 import android.util.Log;
 
-import com.df.lib_seete6.config.AppConfig;
+import com.df.lib_seete6.config.EnginConfig;
 import com.seeta.sdk.FaceAntiSpoofing;
 import com.seeta.sdk.FaceDetector;
 import com.seeta.sdk.FaceLandmarker;
@@ -38,7 +38,7 @@ public class EnginHelper {
         return instance;
     }
 
-    public static final Mat matNv21 = new Mat(AppConfig.CAMERA_PREVIEW_HEIGHT + AppConfig.CAMERA_PREVIEW_HEIGHT / 2, AppConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
+    public static final Mat matNv21 = new Mat(EnginConfig.CAMERA_PREVIEW_HEIGHT + EnginConfig.CAMERA_PREVIEW_HEIGHT / 2, EnginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
     private FaceDetector faceDetector = null;
     private FaceLandmarker faceLandMarker = null;
     private FaceRecognizer faceRecognizer = null;
@@ -118,7 +118,7 @@ public class EnginHelper {
                 faceLandMarker = new FaceLandmarker(new SeetaModelSetting(new String[]{rootPath + pdModel}));
                 faceRecognizer = new FaceRecognizer(new SeetaModelSetting(new String[]{rootPath + frModel}));
             }
-            faceDetector.set(Property.PROPERTY_MIN_FACE_SIZE, AppConfig.MIN_FACE_SIZE);
+            faceDetector.set(Property.PROPERTY_MIN_FACE_SIZE, EnginConfig.MIN_FACE_SIZE);
 
             if (faceAntiSpoofing == null && needCheckSpoofing) {
                 File fasModelPathFile = new File(fasModelPath);
@@ -129,7 +129,7 @@ public class EnginHelper {
                 }
                 rootPath = fasModelPath + "/";
                 faceAntiSpoofing = new FaceAntiSpoofing(new SeetaModelSetting(new String[]{rootPath + fasModel1, rootPath + fasModel2}));
-                faceAntiSpoofing.SetThreshold(AppConfig.FAS_CLARITY, AppConfig.FAS_THRESH);
+                faceAntiSpoofing.SetThreshold(EnginConfig.FAS_CLARITY, EnginConfig.FAS_THRESH);
             }
             isInitOver = true;
             Log.e(TAG, "-----------init over--------------");

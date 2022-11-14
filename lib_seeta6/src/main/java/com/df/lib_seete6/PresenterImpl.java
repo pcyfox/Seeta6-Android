@@ -9,7 +9,7 @@ import android.os.Message;
 import android.os.Process;
 import android.util.Log;
 
-import com.df.lib_seete6.config.AppConfig;
+import com.df.lib_seete6.config.EnginConfig;
 import com.df.lib_seete6.utils.EnginHelper;
 import com.seeta.sdk.FaceAntiSpoofing;
 import com.seeta.sdk.FaceRecognizer;
@@ -34,8 +34,8 @@ public class PresenterImpl implements Contract.Presenter {
     private static final String TAG = "PresenterImpl";
     private Contract.View mView;
 
-    private static final int WIDTH = AppConfig.IMAGE_WIDTH;
-    private static final int HEIGHT = AppConfig.IMAGE_HEIGHT;
+    private static final int WIDTH = EnginConfig.IMAGE_WIDTH;
+    private static final int HEIGHT = EnginConfig.IMAGE_HEIGHT;
 
     public SeetaImageData imageData = new SeetaImageData(WIDTH, HEIGHT, 3);
 
@@ -149,7 +149,7 @@ public class PresenterImpl implements Contract.Presenter {
                     faceRecognizer.Extract(imageData, points, feats);
                     for (String name : TrackingInfo.name2feats.keySet()) {
                         float sim = faceRecognizer.CalculateSimilarity(feats, TrackingInfo.name2feats.get(name));
-                        if (sim > maxSimilarity && sim > AppConfig.FACE_THRESH) {
+                        if (sim > maxSimilarity && sim > EnginConfig.FACE_THRESH) {
                             maxSimilarity = sim;
                             targetName = name;
                             //活体检测
@@ -213,7 +213,7 @@ public class PresenterImpl implements Contract.Presenter {
         }
         TrackingInfo trackingInfo = new TrackingInfo();
         EnginHelper.matNv21.put(0, 0, data);
-        trackingInfo.matBgr = new Mat(AppConfig.CAMERA_PREVIEW_HEIGHT, AppConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
+        trackingInfo.matBgr = new Mat(EnginConfig.CAMERA_PREVIEW_HEIGHT, EnginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
         trackingInfo.matGray = new Mat();
         Imgproc.cvtColor(EnginHelper.matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 

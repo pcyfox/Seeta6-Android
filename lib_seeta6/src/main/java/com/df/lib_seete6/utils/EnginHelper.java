@@ -32,13 +32,15 @@ public class EnginHelper {
     private EnginHelper() {
     }
 
+    private EnginConfig enginConfig = new EnginConfig();
     private final static EnginHelper instance = new EnginHelper();
 
     public static EnginHelper getInstance() {
         return instance;
     }
 
-    public static final Mat matNv21 = new Mat(EnginConfig.CAMERA_PREVIEW_HEIGHT + EnginConfig.CAMERA_PREVIEW_HEIGHT / 2, EnginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
+    public final Mat matNv21 = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT + enginConfig.CAMERA_PREVIEW_HEIGHT / 2, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
+
     private FaceDetector faceDetector = null;
     private FaceLandmarker faceLandMarker = null;
     private FaceRecognizer faceRecognizer = null;
@@ -66,8 +68,12 @@ public class EnginHelper {
         return isInitOver;
     }
 
-    public void setInitOver(boolean initOver) {
-        isInitOver = initOver;
+    public void setEnginConfig(EnginConfig enginConfig) {
+        this.enginConfig = enginConfig;
+    }
+
+    public EnginConfig getEnginConfig() {
+        return enginConfig;
     }
 
     public void initEngine(Context context, boolean needCheckSpoofing) {
@@ -118,7 +124,7 @@ public class EnginHelper {
                 faceLandMarker = new FaceLandmarker(new SeetaModelSetting(new String[]{rootPath + pdModel}));
                 faceRecognizer = new FaceRecognizer(new SeetaModelSetting(new String[]{rootPath + frModel}));
             }
-            faceDetector.set(Property.PROPERTY_MIN_FACE_SIZE, EnginConfig.MIN_FACE_SIZE);
+            faceDetector.set(Property.PROPERTY_MIN_FACE_SIZE, enginConfig.MIN_FACE_SIZE);
 
             if (faceAntiSpoofing == null && needCheckSpoofing) {
                 File fasModelPathFile = new File(fasModelPath);
@@ -129,7 +135,7 @@ public class EnginHelper {
                 }
                 rootPath = fasModelPath + "/";
                 faceAntiSpoofing = new FaceAntiSpoofing(new SeetaModelSetting(new String[]{rootPath + fasModel1, rootPath + fasModel2}));
-                faceAntiSpoofing.SetThreshold(EnginConfig.FAS_CLARITY, EnginConfig.FAS_THRESH);
+                faceAntiSpoofing.SetThreshold(enginConfig.FAS_CLARITY, enginConfig.FAS_THRESH);
             }
             isInitOver = true;
             Log.e(TAG, "-----------init over--------------");

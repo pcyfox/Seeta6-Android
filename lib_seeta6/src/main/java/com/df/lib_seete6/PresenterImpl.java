@@ -33,9 +33,7 @@ public class PresenterImpl implements Contract.Presenter {
 
     private static final String TAG = "PresenterImpl";
     private Contract.View mView;
-
-    private EnginConfig enginConfig = new EnginConfig();
-
+    private final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
     private final int WIDTH = enginConfig.IMAGE_WIDTH;
     private final int HEIGHT = enginConfig.IMAGE_HEIGHT;
 
@@ -70,9 +68,6 @@ public class PresenterImpl implements Contract.Presenter {
         mView.setPresenter(this);
     }
 
-    public void setEnginConfig(EnginConfig enginConfig) {
-        this.enginConfig = enginConfig;
-    }
 
     private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
         @Override
@@ -217,10 +212,10 @@ public class PresenterImpl implements Contract.Presenter {
             return;
         }
         TrackingInfo trackingInfo = new TrackingInfo();
-        EnginHelper.matNv21.put(0, 0, data);
+        EnginHelper.getInstance().matNv21.put(0, 0, data);
         trackingInfo.matBgr = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
         trackingInfo.matGray = new Mat();
-        Imgproc.cvtColor(EnginHelper.matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
+        Imgproc.cvtColor(EnginHelper.getInstance().matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 
         Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);
         Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);

@@ -16,4 +16,6 @@ public class AppConfig {
 
     public static final float SILENT_FACE_ANTI_SPOOFING_THRESHOLD = 0.99f;
 
+    public static  float THRESH = 0.70f;
+
 }

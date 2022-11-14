@@ -9,7 +9,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.seetatech.seetaverify.mvp.MainFragment;
-import com.seetatech.seetaverify.mvp.PresenterImpl;
+import com.df.lib_seete6.PresenterImpl;
 
 public class MainActivity extends AppCompatActivity {
 

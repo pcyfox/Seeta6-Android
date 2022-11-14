@@ -1,12 +1,11 @@
-package com.seetatech.seetaverify.mvp;
+package com.df.lib_seete6;
 
 import android.graphics.Bitmap;
-import android.view.TextureView;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
-public interface VerificationContract {
+public interface Contract {
 
     interface View {
 
@@ -20,7 +19,7 @@ public interface VerificationContract {
 
         void setStatus(int status, Mat matBgr, Rect faceRect);
 
-        void setName(String name, Mat matBgr, Rect faceRect);
+        void onDetectFinish(float similarity, String name, Mat matBgr, Rect faceRect);
 
         void FaceRegister(String tip);
 
@@ -30,11 +29,14 @@ public interface VerificationContract {
 
         void setPresenter(Presenter presenter);
 
-
         boolean isActive();
+
+
     }
 
     interface Presenter {
+
+        void startRegister(boolean needFaceRegister, String registeredName);
 
         void detect(byte[] data, int width, int height, int rotation);
 

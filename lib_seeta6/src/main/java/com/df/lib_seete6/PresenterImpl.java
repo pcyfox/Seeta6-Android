@@ -1,4 +1,4 @@
-package com.seetatech.seetaverify.mvp;
+package com.df.lib_seete6;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -38,21 +38,20 @@ import java.util.Map;
 import java.util.Objects;
 
 
-public class PresenterImpl implements VerificationContract.Presenter {
+public class PresenterImpl implements Contract.Presenter {
 
     static {
         System.loadLibrary("opencv_java3");
     }
 
     private static final String TAG = "PresenterImpl";
-    private final VerificationContract.View mView;
+    private final Contract.View mView;
     public static FaceDetector faceDetector = null;
 
     private static final int WIDTH = AppConfig.IMAGE_WIDTH;
     private static final int HEIGHT = AppConfig.IMAGE_HEIGHT;
     public SeetaImageData imageData = new SeetaImageData(WIDTH, HEIGHT, 3);
 
-    private float thresh = 0.70f;
 
     public static FaceLandmarker faceLandmarker = null;
     public static FaceRecognizer faceRecognizer = null;
@@ -82,7 +81,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
 
     private final Mat matNv21 = new Mat(AppConfig.CAMERA_PREVIEW_HEIGHT + AppConfig.CAMERA_PREVIEW_HEIGHT / 2, AppConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
 
-    public PresenterImpl(Context context, VerificationContract.View view) {
+    public PresenterImpl(Context context, Contract.View view) {
         mView = view;
         mView.setPresenter(this);
 
@@ -111,7 +110,6 @@ public class PresenterImpl implements VerificationContract.Presenter {
             Log.e(TAG, "PresenterImpl() init fail,can't find models");
             return;
         }
-
         String rootPath = cacheDir + "/";
         try {
             if (faceDetector == null || faceLandmarker == null || faceRecognizer == null) {
@@ -209,63 +207,66 @@ public class PresenterImpl implements VerificationContract.Presenter {
             String targetName = "unknown";
             //注册人脸
             if (needFaceRegister) {
-                boolean canRegister = true;
-                float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
-                if (trackingInfo.faceInfo.width != 0) {
-                    //特征点检测
-                    SeetaPointF[] points = new SeetaPointF[5];
-                    faceLandmarker.mark(imageData, trackingInfo.faceInfo, points);
-                    //特征提取
-                    faceRecognizer.Extract(imageData, points, feats);
-                    if ("".equals(registeredName)) {
-                        canRegister = false;
-                        final String tip = "注册名称不能为空";
-                        new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
-                    }
-                    for (String key : TrackingInfo.name2feats.keySet()) {
-                        if (key.equals(registeredName)) {
-                            canRegister = false;
-                            final String tip = registeredName + "已经注册";
-                            new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
-                        }
-                    }
-                }
-
-                //进行人脸的注册
-                if (canRegister) {
-                    TrackingInfo.name2feats.put(registeredName, feats);
-                    final String tip = registeredName + "名称已经注册成功";
-                    new Handler(Looper.getMainLooper()).post(() -> mView.FaceRegister(tip));
-                }
+                startRegister(trackingInfo);
             }
-
             //进行人脸识别
+            float maxSimilarity = 0.0f;
             if (trackingInfo.faceInfo.width != 0) {
                 //特征点检测
                 SeetaPointF[] points = new SeetaPointF[5];
                 faceLandmarker.mark(imageData, trackingInfo.faceInfo, points);
-
                 //特征提取
                 if (!TrackingInfo.name2feats.isEmpty()) {//不空进行特征提取，并比对
                     float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
                     faceRecognizer.Extract(imageData, points, feats);
-                    int galleryNum = TrackingInfo.name2feats.size();
-                    float maxSimilarity = 0.0f;
                     for (String name : TrackingInfo.name2feats.keySet()) {
                         float sim = faceRecognizer.CalculateSimilarity(feats, TrackingInfo.name2feats.get(name));
-                        if (sim > maxSimilarity && sim > thresh) {
+                        if (sim > maxSimilarity && sim > AppConfig.THRESH) {
                             maxSimilarity = sim;
                             targetName = name;
                         }
                     }
                 }
             }
-
             final String pickedName = targetName;
-            Log.e("recognized name:", pickedName);
-            new Handler(Looper.getMainLooper()).post(() -> mView.setName(pickedName, trackingInfo.matBgr, faceRect));
+            final float similarity = maxSimilarity;
+
+            new Handler(Looper.getMainLooper()).post(() -> mView.onDetectFinish(similarity, pickedName, trackingInfo.matBgr, faceRect));
         }
     };
+
+    private void startRegister(TrackingInfo trackingInfo) {
+        boolean canRegister = true;
+        float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
+        if (trackingInfo.faceInfo.width != 0) {
+            //特征点检测
+            SeetaPointF[] points = new SeetaPointF[5];
+            faceLandmarker.mark(imageData, trackingInfo.faceInfo, points);
+            //特征提取
+            faceRecognizer.Extract(imageData, points, feats);
+            if ("".equals(registeredName)) {
+                canRegister = false;
+                final String tip = "注册名称不能为空";
+                new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
+            }
+            for (String key : TrackingInfo.name2feats.keySet()) {
+                if (key.equals(registeredName)) {
+                    needFaceRegister = false;
+                    canRegister = false;
+                    final String tip = registeredName + "已经注册";
+                    new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
+                }
+            }
+        }
+
+        //进行人脸的注册
+        if (canRegister) {
+            needFaceRegister = false;
+            TrackingInfo.name2feats.put(registeredName, feats);
+            final String tip = registeredName + "名称已经注册成功";
+            new Handler(Looper.getMainLooper()).post(() -> mView.FaceRegister(tip));
+        }
+    }
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
@@ -308,6 +309,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
         }
     }
 
+    @Override
     public void startRegister(boolean needFaceRegister, String registeredName) {
         this.needFaceRegister = needFaceRegister;
         this.registeredName = registeredName;

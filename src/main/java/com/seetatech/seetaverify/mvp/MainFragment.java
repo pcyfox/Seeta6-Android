@@ -30,6 +30,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
+import com.df.lib_seete6.Contract;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview2;
 import com.seetatech.seetaverify.R;
@@ -41,7 +42,7 @@ import butterknife.ButterKnife;
 
 
 @SuppressWarnings("deprecation")
-public class MainFragment extends Fragment implements VerificationContract.View {
+public class MainFragment extends Fragment implements Contract.View {
     public static final String TAG = "MainFragment";
     private static final int REQUEST_CAMERA_PERMISSION = 200;
 
@@ -60,7 +61,7 @@ public class MainFragment extends Fragment implements VerificationContract.View 
     @BindView(R.id.btn_register)
     Button btn_register;
 
-    private VerificationContract.Presenter mPresenter;
+    private Contract.Presenter mPresenter;
     private AlertDialog mCameraUnavailableDialog;
     private Camera.Size mPreviewSize;
 
@@ -71,12 +72,7 @@ public class MainFragment extends Fragment implements VerificationContract.View 
 
     private float mPreviewScaleX = 1.0f;
     private float mPreviewScaleY = 1.0f;
-
-    public boolean needFaceRegister = false;//是否需要注册人脸
-    public String registeredName = "";//注册的名称
-
     public String recognizedName = "";
-
 
     private final CameraCallbacks mCameraCallbacks = new CameraCallbacks() {
         @Override
@@ -129,8 +125,8 @@ public class MainFragment extends Fragment implements VerificationContract.View 
         mCameraPreview.setCameraCallbacks(mCameraCallbacks);
         btn_register.setOnClickListener(view12 -> {
             //人脸注册
-            needFaceRegister = true;
-            registeredName = edit_name.getText().toString();
+            String registeredName = edit_name.getText().toString();
+            mPresenter.startRegister(true, registeredName);
         });
 
         edit_name.setOnClickListener(view1 -> edit_name.setFocusable(true));
@@ -214,33 +210,21 @@ public class MainFragment extends Fragment implements VerificationContract.View 
     }
 
     @Override
-    public void setName(String name, Mat matBgr, org.opencv.core.Rect faceRect) {
+    public void onDetectFinish(float similarity, String name, Mat matBgr, org.opencv.core.Rect faceRect) {
         //展示名称
         if (!isActive()) {
             return;
         }
-        Canvas canvas = mOverlapHolder.lockCanvas();
-        recognizedName = name;
-        //canvas.drawText(recognizedName, 100, 100, mFaceNamePaint);
-        if (canvas == null) {
-            return;
-        }
-        mOverlapHolder.unlockCanvasAndPost(canvas);
-        //显示识别结果
         txtTips.setText(name);
     }
 
     @Override
     public void showSimpleTip(String tip) {
-        needFaceRegister = false;
-        registeredName = "";
         Toast.makeText(getContext(), tip, Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void FaceRegister(String tip) {
-        needFaceRegister = false;
-        registeredName = "";
         //提示注册成功
         Toast.makeText(getContext(), tip, Toast.LENGTH_LONG).show();
         //还原EditView
@@ -254,7 +238,7 @@ public class MainFragment extends Fragment implements VerificationContract.View 
     }
 
     @Override
-    public void setPresenter(VerificationContract.Presenter presenter) {
+    public void setPresenter(Contract.Presenter presenter) {
         this.mPresenter = presenter;
     }
 

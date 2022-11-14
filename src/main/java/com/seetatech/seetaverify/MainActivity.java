@@ -3,8 +3,10 @@ package com.seetatech.seetaverify;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
+
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.util.Log;
 import android.view.View;
 
@@ -14,16 +16,14 @@ import com.df.lib_seete6.PresenterImpl;
 public class MainActivity extends AppCompatActivity {
 
     public static final String TAG = "MainActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate");
         setContentView(R.layout.activity_main);
-        Fragment fragment = FragmentFactory.create(this, BuildConfig.BUILD_TYPE);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(android.R.id.content, fragment)
-                .commitNow();
+        Fragment fragment = FragmentFactory.create(this);
+        getSupportFragmentManager().beginTransaction().replace(android.R.id.content, fragment).commitNow();
         this.setFinishOnTouchOutside(false);
     }
 
@@ -32,8 +32,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         Log.i(TAG, "onResume");
         View decorView = getWindow().getDecorView();
-        int uiOptions = decorView.getSystemUiVisibility()
-                | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        int uiOptions = decorView.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
 
     }
@@ -57,12 +56,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static class FragmentFactory {
-        public static Fragment create(Context context, String buildType) {
-
-                MainFragment fragment = new MainFragment();
-                new PresenterImpl(context, fragment);
-                return fragment;
-
+        public static Fragment create(Context context) {
+            MainFragment fragment = new MainFragment();
+            new PresenterImpl(context, fragment, true);
+            return fragment;
         }
     }
 }

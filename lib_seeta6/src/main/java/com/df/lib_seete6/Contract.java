@@ -2,6 +2,8 @@ package com.df.lib_seete6;
 
 import android.graphics.Bitmap;
 
+import com.seeta.sdk.FaceAntiSpoofing;
+
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
@@ -19,7 +21,8 @@ public interface Contract {
 
         void setStatus(int status, Mat matBgr, Rect faceRect);
 
-        void onDetectFinish(float similarity, String name, Mat matBgr, Rect faceRect);
+        void onDetectFinish(FaceAntiSpoofing.Status status,float similarity, String name, Mat matBgr, Rect faceRect);
+
 
         void FaceRegister(String tip);
 

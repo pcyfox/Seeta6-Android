@@ -33,6 +33,7 @@ import androidx.fragment.app.Fragment;
 import com.df.lib_seete6.Contract;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview2;
+import com.seeta.sdk.FaceAntiSpoofing;
 import com.seetatech.seetaverify.R;
 
 import org.opencv.core.Mat;
@@ -55,6 +56,10 @@ public class MainFragment extends Fragment implements Contract.View {
     @BindView(R.id.txt_name)
     TextView txtTips;
 
+
+    @BindView(R.id.txt_state)
+    TextView tvfacestatus;
+
     @BindView(R.id.et_registername)
     EditText edit_name;
 
@@ -72,7 +77,6 @@ public class MainFragment extends Fragment implements Contract.View {
 
     private float mPreviewScaleX = 1.0f;
     private float mPreviewScaleY = 1.0f;
-    public String recognizedName = "";
 
     private final CameraCallbacks mCameraCallbacks = new CameraCallbacks() {
         @Override
@@ -210,11 +214,28 @@ public class MainFragment extends Fragment implements Contract.View {
     }
 
     @Override
-    public void onDetectFinish(float similarity, String name, Mat matBgr, org.opencv.core.Rect faceRect) {
+    public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String name, Mat matBgr, org.opencv.core.Rect faceRect) {
+
         //展示名称
         if (!isActive()) {
             return;
         }
+        switch (status)
+        {
+            case DETECTING:
+                tvfacestatus.setText("没有人脸");
+                break;
+            case REAL:
+                tvfacestatus.setText("真人脸");
+                break;
+            case SPOOF:
+                tvfacestatus.setText("假人脸");
+                break;
+            case FUZZY:
+                tvfacestatus.setText("图像过于模糊");
+                break;
+        }
+
         txtTips.setText(name);
     }
 

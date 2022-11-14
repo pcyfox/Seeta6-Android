@@ -34,8 +34,10 @@ public class PresenterImpl implements Contract.Presenter {
     private static final String TAG = "PresenterImpl";
     private Contract.View mView;
 
-    private static final int WIDTH = EnginConfig.IMAGE_WIDTH;
-    private static final int HEIGHT = EnginConfig.IMAGE_HEIGHT;
+    private EnginConfig enginConfig = new EnginConfig();
+
+    private final int WIDTH = enginConfig.IMAGE_WIDTH;
+    private final int HEIGHT = enginConfig.IMAGE_HEIGHT;
 
     public SeetaImageData imageData = new SeetaImageData(WIDTH, HEIGHT, 3);
 
@@ -68,6 +70,9 @@ public class PresenterImpl implements Contract.Presenter {
         mView.setPresenter(this);
     }
 
+    public void setEnginConfig(EnginConfig enginConfig) {
+        this.enginConfig = enginConfig;
+    }
 
     private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
         @Override
@@ -149,7 +154,7 @@ public class PresenterImpl implements Contract.Presenter {
                     faceRecognizer.Extract(imageData, points, feats);
                     for (String name : TrackingInfo.name2feats.keySet()) {
                         float sim = faceRecognizer.CalculateSimilarity(feats, TrackingInfo.name2feats.get(name));
-                        if (sim > maxSimilarity && sim > EnginConfig.FACE_THRESH) {
+                        if (sim > maxSimilarity && sim > enginConfig.FACE_THRESH) {
                             maxSimilarity = sim;
                             targetName = name;
                             //活体检测
@@ -213,7 +218,7 @@ public class PresenterImpl implements Contract.Presenter {
         }
         TrackingInfo trackingInfo = new TrackingInfo();
         EnginHelper.matNv21.put(0, 0, data);
-        trackingInfo.matBgr = new Mat(EnginConfig.CAMERA_PREVIEW_HEIGHT, EnginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
+        trackingInfo.matBgr = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
         trackingInfo.matGray = new Mat();
         Imgproc.cvtColor(EnginHelper.matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 

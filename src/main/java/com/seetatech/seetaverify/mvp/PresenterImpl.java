@@ -35,6 +35,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class PresenterImpl implements VerificationContract.Presenter {
@@ -55,6 +56,9 @@ public class PresenterImpl implements VerificationContract.Presenter {
 
     public static FaceLandmarker faceLandmarker = null;
     public static FaceRecognizer faceRecognizer = null;
+
+    private boolean needFaceRegister;
+    private String registeredName;
 
     public static class TrackingInfo {
         public Mat matBgr;
@@ -82,7 +86,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
         mView = view;
         mView.setPresenter(this);
 
-        File cacheDir = getInternalCacheDirectory(context, null);
+        File cacheDir = getInternalCacheDirectory(context, "model");
         String modelPath = cacheDir.getAbsolutePath();
         Log.d("cacheDir", "" + modelPath);
 
@@ -103,6 +107,11 @@ public class PresenterImpl implements VerificationContract.Presenter {
             FileUtils.copyFromAsset(context, frModel, frFile, false);
         }
 
+        if (cacheDir.list() == null || Objects.requireNonNull(cacheDir.list()).length == 0) {
+            Log.e(TAG, "PresenterImpl() init fail,can't find models");
+            return;
+        }
+
         String rootPath = cacheDir + "/";
         try {
             if (faceDetector == null || faceLandmarker == null || faceRecognizer == null) {
@@ -121,6 +130,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
         File file = new File(path + "/" + modelName);
         return file.exists();
     }
+
 
     public static File getInternalCacheDirectory(Context context, String type) {
         File appCacheDir = null;
@@ -198,8 +208,7 @@ public class PresenterImpl implements VerificationContract.Presenter {
             trackingInfo.matBgr.get(0, 0, imageData.data);
             String targetName = "unknown";
             //注册人脸
-            MainFragment mainFragment = (MainFragment) mView;
-            if (mainFragment.needFaceRegister) {
+            if (needFaceRegister) {
                 boolean canRegister = true;
                 float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
                 if (trackingInfo.faceInfo.width != 0) {
@@ -208,15 +217,15 @@ public class PresenterImpl implements VerificationContract.Presenter {
                     faceLandmarker.mark(imageData, trackingInfo.faceInfo, points);
                     //特征提取
                     faceRecognizer.Extract(imageData, points, feats);
-                    if ("".equals(mainFragment.registeredName)) {
+                    if ("".equals(registeredName)) {
                         canRegister = false;
                         final String tip = "注册名称不能为空";
                         new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
                     }
-                    for (String key : trackingInfo.name2feats.keySet()) {
-                        if (key.equals(mainFragment.registeredName)) {
+                    for (String key : TrackingInfo.name2feats.keySet()) {
+                        if (key.equals(registeredName)) {
                             canRegister = false;
-                            final String tip = mainFragment.registeredName + "已经注册";
+                            final String tip = registeredName + "已经注册";
                             new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
                         }
                     }
@@ -224,8 +233,8 @@ public class PresenterImpl implements VerificationContract.Presenter {
 
                 //进行人脸的注册
                 if (canRegister) {
-                    trackingInfo.name2feats.put(mainFragment.registeredName, feats);
-                    final String tip = mainFragment.registeredName + "名称已经注册成功";
+                    TrackingInfo.name2feats.put(registeredName, feats);
+                    final String tip = registeredName + "名称已经注册成功";
                     new Handler(Looper.getMainLooper()).post(() -> mView.FaceRegister(tip));
                 }
             }
@@ -237,13 +246,13 @@ public class PresenterImpl implements VerificationContract.Presenter {
                 faceLandmarker.mark(imageData, trackingInfo.faceInfo, points);
 
                 //特征提取
-                if (!trackingInfo.name2feats.isEmpty()) {//不空进行特征提取，并比对
+                if (!TrackingInfo.name2feats.isEmpty()) {//不空进行特征提取，并比对
                     float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
                     faceRecognizer.Extract(imageData, points, feats);
-                    int galleryNum = trackingInfo.name2feats.size();
+                    int galleryNum = TrackingInfo.name2feats.size();
                     float maxSimilarity = 0.0f;
-                    for (String name : trackingInfo.name2feats.keySet()) {
-                        float sim = faceRecognizer.CalculateSimilarity(feats, trackingInfo.name2feats.get(name));
+                    for (String name : TrackingInfo.name2feats.keySet()) {
+                        float sim = faceRecognizer.CalculateSimilarity(feats, TrackingInfo.name2feats.get(name));
                         if (sim > maxSimilarity && sim > thresh) {
                             maxSimilarity = sim;
                             targetName = name;
@@ -262,7 +271,6 @@ public class PresenterImpl implements VerificationContract.Presenter {
     public void detect(byte[] data, int width, int height, int rotation) {
         TrackingInfo trackingInfo = new TrackingInfo();
         matNv21.put(0, 0, data);
-
         trackingInfo.matBgr = new Mat(AppConfig.CAMERA_PREVIEW_HEIGHT, AppConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
         trackingInfo.matGray = new Mat();
         Imgproc.cvtColor(matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
@@ -272,7 +280,6 @@ public class PresenterImpl implements VerificationContract.Presenter {
         Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
 
         Imgproc.cvtColor(trackingInfo.matBgr, trackingInfo.matGray, Imgproc.COLOR_BGR2GRAY);
-
         trackingInfo.birthTime = System.currentTimeMillis();
         trackingInfo.lastProccessTime = System.currentTimeMillis();
 
@@ -300,6 +307,12 @@ public class PresenterImpl implements VerificationContract.Presenter {
             e.printStackTrace();
         }
     }
+
+    public void startRegister(boolean needFaceRegister, String registeredName) {
+        this.needFaceRegister = needFaceRegister;
+        this.registeredName = registeredName;
+    }
+
 
     @Override
     public void destroy() {

@@ -1,4 +1,4 @@
-package com.seetatech.seetaverify.utils;
+package com.df.lib_seete6.utils;
 
 import android.graphics.Bitmap;
 

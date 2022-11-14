@@ -30,9 +30,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
+import com.df.lib_seete6.camera.CameraCallbacks;
+import com.df.lib_seete6.camera.CameraPreview2;
 import com.seetatech.seetaverify.R;
-import com.seetatech.seetaverify.camera.CameraCallbacks;
-import com.seetatech.seetaverify.camera.CameraPreview2;
 
 import org.opencv.core.Mat;
 

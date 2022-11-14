@@ -1,15 +1,16 @@
-package com.seetatech.seetaverify.camera;
+package com.df.lib_seete6.camera;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.TextureView;
 
-import com.seetatech.seetaverify.constants.ErrorCode;
-import com.seetatech.seetaverify.mvp.exceptions.CameraUnavailableException;
+import androidx.annotation.Nullable;
+
+
+import com.df.lib_seete6.constants.ErrorCode;
 
 import java.util.List;
 

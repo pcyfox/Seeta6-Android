@@ -1,38 +1,38 @@
 /*
-* Copyright 2015 The Android Open Source Project
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-package com.seetatech.seetaverify.camera;
- 
+package com.df.lib_seete6.camera;
+
 import android.content.Context;
 import android.hardware.Camera;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import com.seetatech.seetaverify.constants.ErrorCode;
-import com.seetatech.seetaverify.mvp.exceptions.CameraUnavailableException;
+import androidx.annotation.Nullable;
+
+import com.df.lib_seete6.constants.ErrorCode;
 
 import java.util.List;
 
 /**
  * Camera preview that displays a {@link Camera}.
- *
+ * <p>
  * Handles basic lifecycle methods to display and stop the preview.
  * <p>
  * Implementation is based directly on the documentation at
@@ -44,8 +44,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     private static final String TAG = "CameraPreview";
     private SurfaceHolder mHolder;
-    @Nullable private Camera mCamera;
-    @Nullable private Camera.CameraInfo mCameraInfo;
+    @Nullable
+    private Camera mCamera;
+    @Nullable
+    private Camera.CameraInfo mCameraInfo;
     private int mDisplayOrientation;
     private CameraCallbacks mCallbacks;
     private boolean isCreated;
@@ -114,7 +116,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     private void setCamera(Camera camera, Camera.CameraInfo cameraInfo,
-                          int displayOrientation) {
+                           int displayOrientation) {
         mCamera = camera;
         mCameraInfo = cameraInfo;
         mDisplayOrientation = displayOrientation;
@@ -130,14 +132,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     private void startPreview(SurfaceHolder holder) {
         // The Surface has been created, now tell the camera where to draw the preview.
-        if(mCamera == null || mCameraInfo == null) {
+        if (mCamera == null || mCameraInfo == null) {
             return;
         }
         try {
             mCamera.setPreviewDisplay(holder);
             List<Camera.Size> sizes = mCamera.getParameters().getSupportedPreviewSizes();
             Camera.Size expected = sizes.get(sizes.size() - 1);
-            for(Camera.Size size : sizes) {
+            for (Camera.Size size : sizes) {
                 if (size.width == 1280 && size.height == 720) {
                     expected = size;
                     break;
@@ -149,12 +151,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera.setParameters(parameters);
             mCamera.startPreview();
             Log.i(TAG, "Camera preview started.");
-            if(mCallbacks != null) {
+            if (mCallbacks != null) {
                 mCamera.setPreviewCallback(mCallbacks);
             }
         } catch (Exception e) {
             Log.i(TAG, "Error setting camera preview: " + e.getMessage());
-            if(mCallbacks != null) {
+            if (mCallbacks != null) {
                 mCallbacks.onCameraUnavailable(ErrorCode.CAMERA_UNAVAILABLE_PREVIEW);
             }
         }
@@ -181,7 +183,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     private void openCamera() throws CameraUnavailableException {
-        if(Camera.getNumberOfCameras() > 0) {
+        if (Camera.getNumberOfCameras() > 0) {
             try {
                 mCamera = Camera.open(CAMERA_ID);
                 assert mCamera != null;
@@ -201,25 +203,25 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera = null;
         }
     }
- 
+
     public void surfaceCreated(SurfaceHolder holder) {
         Log.i(TAG, "surfaceCreated");
         isCreated = true;
         removeCallbacks(mStartPreviewAction);
         postDelayed(mStartPreviewAction, 1000);
     }
- 
+
     public void surfaceDestroyed(SurfaceHolder holder) {
         // empty. Take care of releasing the Camera preview in your activity.
         Log.i(TAG, "surfaceDestroy");
         isCreated = false;
         removeCallbacks(mStartPreviewAction);
     }
- 
+
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
         // If your preview can change or rotate, take care of those events here.
         // Make sure to stop the preview before resizing or reformatting it.
-        if(mCamera == null || mCameraInfo == null) {
+        if (mCamera == null || mCameraInfo == null) {
             return;
         }
         if (mHolder.getSurface() == null) {

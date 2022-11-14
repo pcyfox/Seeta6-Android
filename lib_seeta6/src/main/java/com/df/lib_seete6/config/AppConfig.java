@@ -1,4 +1,4 @@
-package com.seetatech.seetaverify.config;
+package com.df.lib_seete6.config;
 
 
 /**

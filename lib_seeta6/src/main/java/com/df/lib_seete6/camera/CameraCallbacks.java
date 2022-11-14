@@ -1,4 +1,4 @@
-package com.seetatech.seetaverify.camera;
+package com.df.lib_seete6.camera;
 
 import android.hardware.Camera;
 

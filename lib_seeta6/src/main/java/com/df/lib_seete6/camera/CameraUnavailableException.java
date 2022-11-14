@@ -1,4 +1,4 @@
-package com.seetatech.seetaverify.mvp.exceptions;
+package com.df.lib_seete6.camera;
 
 public class CameraUnavailableException extends RuntimeException {
     public CameraUnavailableException() {

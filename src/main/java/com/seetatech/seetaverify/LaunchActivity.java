@@ -5,11 +5,12 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.seetatech.seetaverify.utils.CachedImage;
+import com.df.lib_seete6.utils.CachedImage;
 
 public class LaunchActivity extends AppCompatActivity {
 
@@ -39,8 +40,6 @@ public class LaunchActivity extends AppCompatActivity {
             if (CachedImage.imageAfterBlink != null) {
                 imageView.setImageBitmap(CachedImage.imageAfterBlink);
                 CachedImage.imageAfterBlink = null;
-            }
-            if (data != null) {
             }
         } else if (resultCode == RESULT_FIRST_USER) {
             imageView.setImageBitmap(null);

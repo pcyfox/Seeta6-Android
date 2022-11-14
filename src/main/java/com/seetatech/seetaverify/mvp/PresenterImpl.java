@@ -10,6 +10,8 @@ import android.os.Process;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.df.lib_seete6.config.AppConfig;
+import com.df.lib_seete6.utils.FileUtils;
 import com.seeta.sdk.FaceDetector;
 import com.seeta.sdk.FaceLandmarker;
 import com.seeta.sdk.FaceRecognizer;
@@ -19,8 +21,6 @@ import com.seeta.sdk.SeetaImageData;
 import com.seeta.sdk.SeetaModelSetting;
 import com.seeta.sdk.SeetaPointF;
 import com.seeta.sdk.SeetaRect;
-import com.seetatech.seetaverify.config.AppConfig;
-import com.seetatech.seetaverify.utils.FileUtils;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -31,7 +31,6 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
@@ -263,9 +262,9 @@ public class PresenterImpl implements VerificationContract.Presenter {
     public void detect(byte[] data, int width, int height, int rotation) {
         TrackingInfo trackingInfo = new TrackingInfo();
         matNv21.put(0, 0, data);
+
         trackingInfo.matBgr = new Mat(AppConfig.CAMERA_PREVIEW_HEIGHT, AppConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
         trackingInfo.matGray = new Mat();
-
         Imgproc.cvtColor(matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 
         Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);

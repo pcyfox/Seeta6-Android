@@ -1,4 +1,4 @@
-package com.seetatech.seetaverify.constants;
+package com.df.lib_seete6.constants;
 
 public class ErrorCode {
 

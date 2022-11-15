@@ -50,6 +50,16 @@ public class PresenterImpl implements Contract.Presenter {
         public long birthTime;
         public long lastProcessTime;
         public static Map<String, float[]> name2feats = new HashMap<>();
+
+        public static boolean isRegistered(String registeredName) {
+            for (String key : name2feats.keySet()) {
+                if (key.equals(registeredName)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 
     private final HandlerThread mFaceTrackThread;
@@ -133,7 +143,10 @@ public class PresenterImpl implements Contract.Presenter {
 
             SeetaRect faceInfo = trackingInfo.faceInfo;
             if (needFaceRegister) {
-                startRegister(faceInfo);
+                if (startRegister(faceInfo, imageData, registeredName)) {
+                    needFaceRegister = false;
+                    registeredName = "";
+                }
             }
             //进行人脸识别
             float maxSimilarity = 0.0f;
@@ -170,8 +183,17 @@ public class PresenterImpl implements Contract.Presenter {
     };
 
 
-    private boolean startRegister(SeetaRect faceInfo) {
-        boolean canRegister = true;
+    private boolean startRegister(SeetaRect faceInfo, SeetaImageData imageData, String registeredName) {
+        if ("".equals(registeredName)) {
+            final String tip = "注册名称不能为空";
+            new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
+            return false;
+        }
+        if (TrackingInfo.isRegistered(registeredName)) {
+            final String tip = registeredName + ",已经注册";
+            new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
+            return false;
+        }
         FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
         float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
         if (faceInfo.width == 0) {
@@ -182,27 +204,11 @@ public class PresenterImpl implements Contract.Presenter {
         EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
         //特征提取
         faceRecognizer.Extract(imageData, points, feats);
-        if ("".equals(registeredName)) {
-            canRegister = false;
-            final String tip = "注册名称不能为空";
-            new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
-        }
-        for (String key : TrackingInfo.name2feats.keySet()) {
-            if (key.equals(registeredName)) {
-                needFaceRegister = false;
-                canRegister = false;
-                final String tip = registeredName + ",已经注册";
-                new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
-            }
-        }
         //进行人脸的注册
-        if (canRegister) {
-            needFaceRegister = false;
-            TrackingInfo.name2feats.put(registeredName, feats);
-            final String tip = registeredName + ",已经注册成功";
-            new Handler(Looper.getMainLooper()).post(() -> mView.FaceRegister(tip));
-        }
-        return canRegister;
+        TrackingInfo.name2feats.put(registeredName, feats);
+        final String tip = registeredName + ",已经注册成功";
+        new Handler(Looper.getMainLooper()).post(() -> mView.FaceRegister(tip));
+        return true;
     }
 
     @Override

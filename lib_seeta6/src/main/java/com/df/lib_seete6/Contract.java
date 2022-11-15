@@ -23,7 +23,6 @@ public interface Contract {
 
         void onDetectFinish(FaceAntiSpoofing.Status status,float similarity, String name, Mat matBgr, Rect faceRect);
 
-
         void FaceRegister(String tip);
 
         void showSimpleTip(String tip);

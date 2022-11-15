@@ -5,9 +5,12 @@ import static com.df.lib_seete6.utils.FileUtils.isExists;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.df.lib_seete6.config.EnginConfig;
 import com.seeta.sdk.FaceAntiSpoofing;
@@ -164,6 +167,13 @@ public class EnginHelper {
         return false;
     }
 
+    public boolean registerFace(String key, File faceFile) {
+        if (faceFile == null || !faceFile.exists() || !faceFile.canRead() || faceFile.length() == 0 || !faceFile.isFile()) {
+            return false;
+        }
+        Bitmap faceBitmap = BitmapFactory.decodeFile(faceFile.getAbsolutePath());
+        return registerFace(key, faceBitmap);
+    }
 
     public boolean registerFace(String key, Bitmap faceBitmap) {
         SeetaImageData imageData = SeetaUtils.convertToSeetaImageData(faceBitmap);
@@ -173,7 +183,6 @@ public class EnginHelper {
         }
         return startRegister(rectArray[0], imageData, key);
     }
-
 
     public boolean startRegister(SeetaRect faceInfo, SeetaImageData imageData, String registeredName) {
         if ("".equals(registeredName)) {

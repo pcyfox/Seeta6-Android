@@ -16,7 +16,6 @@ import java.io.File;
 
 public class LaunchActivity extends AppCompatActivity {
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,13 +38,8 @@ public class LaunchActivity extends AppCompatActivity {
     private void startRegisterFace() {
         String facePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/face.jpg";
         File faceFile = new File(facePath);
-        if (!faceFile.exists() || !faceFile.canRead()) {
-            Toast.makeText(this, "访问文件失败！", Toast.LENGTH_SHORT).show();
-            return;
-        }
         new Thread(() -> {
-            Bitmap faceBitmap = BitmapFactory.decodeFile(facePath);
-            boolean ret = EnginHelper.getInstance().registerFace("PCY", faceBitmap);
+            boolean ret = EnginHelper.getInstance().registerFace("PCY", faceFile);
             String tip = "注册" + (ret ? "成功" : "失败");
             runOnUiThread(() -> {
                 Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();

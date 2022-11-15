@@ -126,14 +126,14 @@ public class PresenterImpl implements Contract.Presenter {
             }
             if (needFaceRegister) {
                 if (EnginHelper.getInstance().startRegister(faceInfo, imageData, registeredName)) {
-                    needFaceRegister = false;
-                    registeredName = "";
                     final String tip = registeredName + ",注册成功";
                     new Handler(Looper.getMainLooper()).post(() -> mView.onFaceRegisterFinish(true, tip));
                 } else {
                     final String tip = registeredName + ",注册失败";
                     new Handler(Looper.getMainLooper()).post(() -> mView.onFaceRegisterFinish(false, tip));
                 }
+                needFaceRegister = false;
+                registeredName = "";
             }
 
             //进行人脸识别

@@ -168,6 +168,9 @@ public class EnginHelper {
     }
 
     public boolean registerFace(String key, File faceFile) {
+        if (!isInitOver) {
+            return false;
+        }
         if (faceFile == null || !faceFile.exists() || !faceFile.canRead() || faceFile.length() == 0 || !faceFile.isFile()) {
             return false;
         }
@@ -176,12 +179,17 @@ public class EnginHelper {
     }
 
     public boolean registerFace(String key, Bitmap faceBitmap) {
+        if (!isInitOver) {
+            return false;
+        }
         SeetaImageData imageData = SeetaUtils.convertToSeetaImageData(faceBitmap);
         SeetaRect[] rectArray = EnginHelper.getInstance().getFaceDetector().Detect(imageData);
         if (rectArray == null || rectArray.length != 1) {
             return false;
         }
-        return startRegister(rectArray[0], imageData, key);
+        boolean ret = startRegister(rectArray[0], imageData, key);
+        faceBitmap.recycle();
+        return ret;
     }
 
     public boolean startRegister(SeetaRect faceInfo, SeetaImageData imageData, String registeredName) {

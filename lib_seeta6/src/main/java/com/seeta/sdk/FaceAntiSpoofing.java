@@ -6,7 +6,7 @@ public class FaceAntiSpoofing {
     }
 
     public enum Status {
-        REAL, SPOOF, FUZZY, DETECTING,
+        REAL, SPOOF, FUZZY, DETECTING,UNKNOWN
     }
 
     public long impl = 0;

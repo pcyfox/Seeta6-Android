@@ -4,6 +4,9 @@ import static com.df.lib_seete6.utils.FileUtils.getInternalCacheDirectory;
 import static com.df.lib_seete6.utils.FileUtils.isExists;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.df.lib_seete6.config.EnginConfig;
@@ -12,12 +15,17 @@ import com.seeta.sdk.FaceDetector;
 import com.seeta.sdk.FaceLandmarker;
 import com.seeta.sdk.FaceRecognizer;
 import com.seeta.sdk.Property;
+import com.seeta.sdk.SeetaImageData;
 import com.seeta.sdk.SeetaModelSetting;
+import com.seeta.sdk.SeetaPointF;
+import com.seeta.sdk.SeetaRect;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import kotlin.jvm.Volatile;
 
@@ -40,6 +48,8 @@ public class EnginHelper {
     }
 
     public final Mat matNv21 = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT + enginConfig.CAMERA_PREVIEW_HEIGHT / 2, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
+
+    public static Map<String, float[]> registerName2feats = new HashMap<>();
 
     private FaceDetector faceDetector = null;
     private FaceLandmarker faceLandMarker = null;
@@ -144,6 +154,49 @@ public class EnginHelper {
             Log.e(TAG, "init exception:" + e);
         }
     }
+
+    public static boolean isRegistered(String registeredName) {
+        for (String key : registerName2feats.keySet()) {
+            if (key.equals(registeredName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public boolean registerFace(String key, Bitmap faceBitmap) {
+        SeetaImageData imageData = SeetaUtils.convertToSeetaImageData(faceBitmap);
+        SeetaRect[] rectArray = EnginHelper.getInstance().getFaceDetector().Detect(imageData);
+        if (rectArray == null || rectArray.length != 1) {
+            return false;
+        }
+        return startRegister(rectArray[0], imageData, key);
+    }
+
+
+    public boolean startRegister(SeetaRect faceInfo, SeetaImageData imageData, String registeredName) {
+        if ("".equals(registeredName)) {
+            return false;
+        }
+        if (EnginHelper.isRegistered(registeredName)) {
+            return false;
+        }
+        FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
+        float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
+        if (faceInfo.width == 0) {
+            return false;
+        }
+        //特征点检测
+        SeetaPointF[] points = new SeetaPointF[5];
+        EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
+        //特征提取
+        faceRecognizer.Extract(imageData, points, feats);
+        //进行人脸的注册
+        EnginHelper.registerName2feats.put(registeredName, feats);
+        return true;
+    }
+
 
     public void release() {
         if (faceDetector != null) {

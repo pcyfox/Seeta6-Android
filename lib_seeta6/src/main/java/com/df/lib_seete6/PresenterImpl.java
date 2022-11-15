@@ -25,7 +25,6 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -49,17 +48,6 @@ public class PresenterImpl implements Contract.Presenter {
         public Rect faceRect = new Rect();
         public long birthTime;
         public long lastProcessTime;
-        public static Map<String, float[]> name2feats = new HashMap<>();
-
-        public static boolean isRegistered(String registeredName) {
-            for (String key : name2feats.keySet()) {
-                if (key.equals(registeredName)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
     }
 
     private final HandlerThread mFaceTrackThread;
@@ -86,15 +74,8 @@ public class PresenterImpl implements Contract.Presenter {
             trackingInfo.matBgr.get(0, 0, imageData.data);
             SeetaRect[] faces = EnginHelper.getInstance().getFaceDetector().Detect(imageData);
             if (faces.length == 0) {
-                mView.drawFaceRect(null);
                 return;
             }
-
-            trackingInfo.faceInfo.x = 0;
-            trackingInfo.faceInfo.y = 0;
-            trackingInfo.faceInfo.width = 0;
-            trackingInfo.faceInfo.height = 0;
-
             int maxIndex = 0;
             double maxWidth = 0;
             for (int i = 0; i < faces.length; ++i) {
@@ -124,7 +105,6 @@ public class PresenterImpl implements Contract.Presenter {
                 Utils.matToBitmap(faceMatBGRA, faceBmp);
                 mView.drawFaceImage(faceBmp);
             }
-
             mFasHandler.removeMessages(0);
             mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
         }
@@ -140,37 +120,39 @@ public class PresenterImpl implements Contract.Presenter {
             trackingInfo.matBgr.get(0, 0, imageData.data);
             String targetName = "unknown";
             //注册人脸
-
             SeetaRect faceInfo = trackingInfo.faceInfo;
+            if (faceInfo.width == 0) {
+                return;
+            }
             if (needFaceRegister) {
-                if (startRegister(faceInfo, imageData, registeredName)) {
+                if (EnginHelper.getInstance().startRegister(faceInfo, imageData, registeredName)) {
                     needFaceRegister = false;
                     registeredName = "";
+                    final String tip = registeredName + ",注册成功";
+                    new Handler(Looper.getMainLooper()).post(() -> mView.onFaceRegisterFinish(true, tip));
+                } else {
+                    final String tip = registeredName + ",注册失败";
+                    new Handler(Looper.getMainLooper()).post(() -> mView.onFaceRegisterFinish(false, tip));
                 }
             }
+
             //进行人脸识别
             float maxSimilarity = 0.0f;
-            FaceAntiSpoofing.Status faceAntiSpoofingState = FaceAntiSpoofing.Status.DETECTING;//初始状态
-            if (faceInfo.width != 0) {
-                //特征点检测
-                SeetaPointF[] points = new SeetaPointF[5];
-                EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
-                //特征提取
-                if (!TrackingInfo.name2feats.isEmpty()) {//不空进行特征提取，并比对
-                    FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
-                    float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
-                    faceRecognizer.Extract(imageData, points, feats);
-                    for (String name : TrackingInfo.name2feats.keySet()) {
-                        float sim = faceRecognizer.CalculateSimilarity(feats, TrackingInfo.name2feats.get(name));
-                        if (sim > maxSimilarity && sim > enginConfig.FACE_THRESH) {
-                            maxSimilarity = sim;
-                            targetName = name;
-                            //活体检测
-                            FaceAntiSpoofing faceAntiSpoofing = EnginHelper.getInstance().getFaceAntiSpoofing();
-                            if (faceAntiSpoofing != null) {
-                                faceAntiSpoofingState = faceAntiSpoofing.Predict(imageData, faceInfo, points);
-                            }
-                        }
+            FaceAntiSpoofing.Status faceAntiSpoofingState = FaceAntiSpoofing.Status.UNKNOWN;//初始状态
+            //特征点检测
+            SeetaPointF[] points = new SeetaPointF[5];
+            EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
+            //特征提取
+            if (!EnginHelper.registerName2feats.isEmpty()) {//不空进行特征提取，并比对
+                FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
+                float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
+                faceRecognizer.Extract(imageData, points, feats);
+                for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {
+                    float sim = faceRecognizer.CalculateSimilarity(feats, entry.getValue());
+                    if (sim > maxSimilarity && sim > enginConfig.FACE_THRESH) {
+                        maxSimilarity = sim;
+                        targetName = entry.getKey();
+                        faceAntiSpoofingState = checkSpoofing(imageData, faceInfo, points);
                     }
                 }
             }
@@ -182,34 +164,17 @@ public class PresenterImpl implements Contract.Presenter {
         }
     };
 
-
-    private boolean startRegister(SeetaRect faceInfo, SeetaImageData imageData, String registeredName) {
-        if ("".equals(registeredName)) {
-            final String tip = "注册名称不能为空";
-            new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
-            return false;
+    /**
+     * 活体检测
+     */
+    public FaceAntiSpoofing.Status checkSpoofing(SeetaImageData imageData, SeetaRect faceInfo, SeetaPointF[] points) {
+        FaceAntiSpoofing faceAntiSpoofing = EnginHelper.getInstance().getFaceAntiSpoofing();
+        if (faceAntiSpoofing == null) {
+            return FaceAntiSpoofing.Status.UNKNOWN;
         }
-        if (TrackingInfo.isRegistered(registeredName)) {
-            final String tip = registeredName + ",已经注册";
-            new Handler(Looper.getMainLooper()).post(() -> mView.showSimpleTip(tip));
-            return false;
-        }
-        FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
-        float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
-        if (faceInfo.width == 0) {
-            return false;
-        }
-        //特征点检测
-        SeetaPointF[] points = new SeetaPointF[5];
-        EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
-        //特征提取
-        faceRecognizer.Extract(imageData, points, feats);
-        //进行人脸的注册
-        TrackingInfo.name2feats.put(registeredName, feats);
-        final String tip = registeredName + ",已经注册成功";
-        new Handler(Looper.getMainLooper()).post(() -> mView.FaceRegister(tip));
-        return true;
+        return faceAntiSpoofing.Predict(imageData, faceInfo, points);
     }
+
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
@@ -235,8 +200,9 @@ public class PresenterImpl implements Contract.Presenter {
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();
     }
 
+
     @Override
-    public void startRegister(boolean needFaceRegister, String registeredName) {
+    public void startRegisterFrame(boolean needFaceRegister, String registeredName) {
         this.needFaceRegister = needFaceRegister;
         this.registeredName = registeredName;
     }

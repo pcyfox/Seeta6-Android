@@ -21,9 +21,9 @@ public interface Contract {
 
         void setStatus(int status, Mat matBgr, Rect faceRect);
 
-        void onDetectFinish(FaceAntiSpoofing.Status status,float similarity, String name, Mat matBgr, Rect faceRect);
+        void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String name, Mat matBgr, Rect faceRect);
 
-        void FaceRegister(String tip);
+        void onFaceRegisterFinish(boolean isSuccess, String tip);
 
         void showSimpleTip(String tip);
 
@@ -38,7 +38,7 @@ public interface Contract {
 
     interface Presenter {
 
-        void startRegister(boolean needFaceRegister, String registeredName);
+        void startRegisterFrame(boolean needFaceRegister, String registeredName);
 
         void detect(byte[] data, int width, int height, int rotation);
 

@@ -133,7 +133,7 @@ public class MainFragment extends Fragment implements Contract.View {
         btn_register.setOnClickListener(view12 -> {
             //人脸注册
             String registeredName = edit_name.getText().toString();
-            mPresenter.startRegister(true, registeredName);
+            mPresenter.startRegisterFrame(true, registeredName);
         });
 
         edit_name.setOnClickListener(view1 -> edit_name.setFocusable(true));
@@ -149,6 +149,7 @@ public class MainFragment extends Fragment implements Contract.View {
         if (canvas == null) {
             return;
         }
+
         canvas.drawColor(0, PorterDuff.Mode.CLEAR);
         if (faceRect != null) {
             faceRect.x *= mPreviewScaleX;
@@ -218,7 +219,6 @@ public class MainFragment extends Fragment implements Contract.View {
 
     @Override
     public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String name, Mat matBgr, org.opencv.core.Rect faceRect) {
-
         //展示名称
         if (!isActive()) {
             return;
@@ -247,7 +247,7 @@ public class MainFragment extends Fragment implements Contract.View {
     }
 
     @Override
-    public void FaceRegister(String tip) {
+    public void onFaceRegisterFinish(boolean isSuccess, String tip) {
         //提示注册成功
         Toast.makeText(getContext(), tip, Toast.LENGTH_LONG).show();
         //还原EditView

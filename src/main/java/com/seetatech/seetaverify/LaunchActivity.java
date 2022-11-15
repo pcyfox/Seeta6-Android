@@ -1,6 +1,8 @@
 package com.seetatech.seetaverify;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -8,7 +10,10 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.df.lib_seete6.utils.EnginHelper;
 
@@ -20,6 +25,7 @@ public class LaunchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
+        requestPermission();
         this.setFinishOnTouchOutside(false);
     }
 
@@ -45,5 +51,25 @@ public class LaunchActivity extends AppCompatActivity {
                 Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
             });
         }).start();
+    }
+
+    private void requestPermission() {
+        // 先判断有没有权限
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, 200);
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length != 2) {
+            getWindow().getDecorView().postDelayed(() -> {
+                requestPermission();
+            }, 15000);
+        }
     }
 }

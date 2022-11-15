@@ -3,18 +3,13 @@ package com.seetatech.seetaverify.mvp;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +26,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import com.df.lib_seete6.Contract;
+import com.df.lib_seete6.FaceRectView;
 import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview2;
@@ -52,7 +48,7 @@ public class MainFragment extends Fragment implements Contract.View {
     CameraPreview2 mCameraPreview;
 
     @BindView(R.id.surfaceViewOverlap)
-    protected SurfaceView mOverlap;
+    protected FaceRectView mOverlap;
 
     @BindView(R.id.txt_name)
     TextView txtTips;
@@ -71,10 +67,8 @@ public class MainFragment extends Fragment implements Contract.View {
     private AlertDialog mCameraUnavailableDialog;
     private Camera.Size mPreviewSize;
 
-    private SurfaceHolder mOverlapHolder;
     private final Rect focusRect = new Rect();
-    private Paint mFaceRectPaint = null;
-    private Paint mFaceNamePaint = null;
+
 
     private float mPreviewScaleX = 1.0f;
     private float mPreviewScaleY = 1.0f;
@@ -102,15 +96,6 @@ public class MainFragment extends Fragment implements Contract.View {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate");
-        mFaceRectPaint = new Paint();
-        mFaceRectPaint.setColor(Color.argb(150, 0, 255, 0));
-        mFaceRectPaint.setStrokeWidth(3);
-        mFaceRectPaint.setStyle(Paint.Style.STROKE);
-        mFaceNamePaint = new Paint();
-        mFaceNamePaint.setColor(Color.argb(150, 0, 255, 0));
-        mFaceNamePaint.setTextSize(50);
-        mFaceNamePaint.setStyle(Paint.Style.FILL);
-
         mPresenter = new PresenterImpl(this);
     }
 
@@ -126,9 +111,6 @@ public class MainFragment extends Fragment implements Contract.View {
         Log.i(TAG, "onViewCreated");
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this, view);
-        mOverlap.setZOrderOnTop(true);
-        mOverlap.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-        mOverlapHolder = mOverlap.getHolder();
         mCameraPreview.setCameraCallbacks(mCameraCallbacks);
         btn_register.setOnClickListener(view12 -> {
             //人脸注册
@@ -145,25 +127,7 @@ public class MainFragment extends Fragment implements Contract.View {
         if (!isActive()) {
             return;
         }
-        Canvas canvas = mOverlapHolder.lockCanvas();
-        if (canvas == null) {
-            return;
-        }
-
-        canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-        if (faceRect != null) {
-            faceRect.x *= mPreviewScaleX;
-            faceRect.y *= mPreviewScaleY;
-            faceRect.width *= mPreviewScaleX;
-            faceRect.height *= mPreviewScaleY;
-
-            focusRect.left = faceRect.x;
-            focusRect.right = faceRect.x + faceRect.width;
-            focusRect.top = faceRect.y;
-            focusRect.bottom = faceRect.y + faceRect.height;
-            canvas.drawRect(focusRect, mFaceRectPaint);
-        }
-        mOverlapHolder.unlockCanvasAndPost(canvas);
+        mOverlap.drawFaceRect(faceRect, mPreviewScaleX, mPreviewScaleY);
     }
 
     @WorkerThread
@@ -172,16 +136,7 @@ public class MainFragment extends Fragment implements Contract.View {
         if (!isActive()) {
             return;
         }
-        Canvas canvas = mOverlapHolder.lockCanvas();
-        if (canvas == null) {
-            return;
-        }
-        canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-        if (faceBmp != null && !faceBmp.isRecycled()) {
-            canvas.drawBitmap(faceBmp, 0, 0, mFaceRectPaint);
-        }
-
-        mOverlapHolder.unlockCanvasAndPost(canvas);
+        mOverlap.drawBitmap(faceBmp, 0, 0, null);
     }
 
     @Override

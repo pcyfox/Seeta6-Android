@@ -15,7 +15,7 @@
         android:layout_height="640px"
         android:layout_gravity="center_horizontal" />
 
-    <SurfaceView
+    <com.df.lib_seete6.FaceRectView
         android:id="@+id/surfaceViewOverlap"
         android:layout_width="480px"
         android:layout_height="640px"

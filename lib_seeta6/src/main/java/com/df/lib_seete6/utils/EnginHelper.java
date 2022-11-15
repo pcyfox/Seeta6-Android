@@ -6,11 +6,7 @@ import static com.df.lib_seete6.utils.FileUtils.isExists;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.df.lib_seete6.config.EnginConfig;
 import com.seeta.sdk.FaceAntiSpoofing;

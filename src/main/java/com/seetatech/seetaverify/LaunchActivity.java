@@ -1,55 +1,55 @@
 package com.seetatech.seetaverify;
 
-import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import com.df.lib_seete6.utils.CachedImage;
 import com.df.lib_seete6.utils.EnginHelper;
+
+import java.io.File;
 
 public class LaunchActivity extends AppCompatActivity {
 
-    private ImageView imageView;
-    private TextView tvSilentScore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
-        imageView = findViewById(R.id.best_image);
-        tvSilentScore = findViewById(R.id.silentScore);
         this.setFinishOnTouchOutside(false);
     }
 
     public void onClick(View view) {
-        imageView.setImageBitmap(null);
-        tvSilentScore.setText("");
-        startActivityForResult(new Intent(this, MainActivity.class), 1);
-    }
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            if (CachedImage.imageAfterBlink != null) {
-                imageView.setImageBitmap(CachedImage.imageAfterBlink);
-                CachedImage.imageAfterBlink = null;
-            }
-        } else if (resultCode == RESULT_FIRST_USER) {
-            imageView.setImageBitmap(null);
-            tvSilentScore.setText("");
+        switch (view.getId()) {
+            case R.id.btnStart:
+                startActivity(new Intent(this, MainActivity.class));
+                break;
+            case R.id.btnRegisterFace:
+                startRegisterFace();
+                break;
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+
+    private void startRegisterFace() {
+        String facePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/face.jpg";
+        File faceFile = new File(facePath);
+        if (!faceFile.exists() || !faceFile.canRead()) {
+            Toast.makeText(this, "访问文件失败！", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new Thread(() -> {
+            Bitmap faceBitmap = BitmapFactory.decodeFile(facePath);
+            boolean ret = EnginHelper.getInstance().registerFace("PCY", faceBitmap);
+            String tip = "注册" + (ret ? "成功" : "失败");
+            runOnUiThread(() -> {
+                Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
+            });
+        }).start();
     }
 }

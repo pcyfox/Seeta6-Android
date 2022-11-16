@@ -4,9 +4,37 @@ import android.graphics.Bitmap;
 
 import com.seeta.sdk.SeetaImageData;
 
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class SeetaUtils {
+
+    public static void saveImage(Mat bgr, String path, String imageName) {
+        Mat rgba = bgr.clone();
+        Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_BGR2RGBA);
+        Bitmap mBitmap = null;
+        mBitmap = Bitmap.createBitmap(rgba.cols(), rgba.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(rgba, mBitmap);
+        File f = new File(path, imageName);
+        if (f.exists()) {
+            f.delete();
+        }
+        try {
+            FileOutputStream out = new FileOutputStream(f);
+            mBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 转换生成SeetaImageData
      *

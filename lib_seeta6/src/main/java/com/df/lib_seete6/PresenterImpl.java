@@ -7,10 +7,12 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.df.lib_seete6.config.EnginConfig;
 import com.df.lib_seete6.utils.EnginHelper;
+import com.df.lib_seete6.utils.SeetaUtils;
 import com.seeta.sdk.FaceAntiSpoofing;
 import com.seeta.sdk.FaceRecognizer;
 import com.seeta.sdk.SeetaImageData;
@@ -37,9 +39,11 @@ public class PresenterImpl implements Contract.Presenter {
     private final int HEIGHT = enginConfig.IMAGE_HEIGHT;
 
     public SeetaImageData imageData = new SeetaImageData(WIDTH, HEIGHT, 3);
-
     private boolean needFaceRegister;
     private String registeredName;
+
+    private String takePicPath;
+    private String takePciName;
 
     public static class TrackingInfo {
         public Mat matBgr;
@@ -199,17 +203,25 @@ public class PresenterImpl implements Contract.Presenter {
         trackingInfo.matBgr = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
         trackingInfo.birthTime = System.currentTimeMillis();
         trackingInfo.lastProcessTime = System.currentTimeMillis();
-
         Imgproc.cvtColor(EnginHelper.getInstance().matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 
         Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);
         Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
         Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
 
+        if (isNeedTakePic()) {
+            SeetaUtils.saveImage(trackingInfo.matBgr, takePicPath, takePciName);
+            takePicPath = takePciName = null;
+        }
         mFaceTrackingHandler.removeMessages(1);
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();
     }
 
+    @Override
+    public void takePicture(String path, String name) {
+        this.takePciName = name;
+        this.takePicPath = path;
+    }
 
     @Override
     public void startRegisterFrame(boolean needFaceRegister, String registeredName) {
@@ -223,5 +235,9 @@ public class PresenterImpl implements Contract.Presenter {
         mFaceTrackThread.quitSafely();
         mFasThread.quitSafely();
         mView = null;
+    }
+
+    private boolean isNeedTakePic() {
+        return !TextUtils.isEmpty(takePicPath) && !TextUtils.isEmpty(takePciName);
     }
 }

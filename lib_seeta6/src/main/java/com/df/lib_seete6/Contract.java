@@ -38,6 +38,8 @@ public interface Contract {
 
     interface Presenter {
 
+        void takePicture(String path, String name);
+
         void startRegisterFrame(boolean needFaceRegister, String registeredName);
 
         void detect(byte[] data, int width, int height, int rotation);

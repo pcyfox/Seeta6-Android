@@ -3,14 +3,12 @@ package com.seetatech.seetaverify.mvp;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
-import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -63,12 +61,12 @@ public class MainFragment extends Fragment implements Contract.View {
     @BindView(R.id.btn_register)
     Button btn_register;
 
+    @BindView(R.id.btn_take_pic)
+    Button btn_take_pic;
+
     private Contract.Presenter mPresenter;
     private AlertDialog mCameraUnavailableDialog;
     private Camera.Size mPreviewSize;
-
-    private final Rect focusRect = new Rect();
-
 
     private float mPreviewScaleX = 1.0f;
     private float mPreviewScaleY = 1.0f;
@@ -117,8 +115,8 @@ public class MainFragment extends Fragment implements Contract.View {
             String registeredName = edit_name.getText().toString();
             mPresenter.startRegisterFrame(true, registeredName);
         });
-
         edit_name.setOnClickListener(view1 -> edit_name.setFocusable(true));
+        btn_take_pic.setOnClickListener(v -> mPresenter.takePicture("/sdcard/", "detect.jpg"));
     }
 
     @WorkerThread

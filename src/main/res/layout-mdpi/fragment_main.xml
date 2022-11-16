@@ -62,4 +62,15 @@
         android:gravity="center"
         android:text="注册人脸" />
 
+
+    <Button
+        android:id="@+id/btn_take_pic"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:layout_marginLeft="130dp"
+        android:layout_marginTop="910px"
+        android:gravity="center"
+        android:text="抓拍图片" />
+
+
 </FrameLayout>

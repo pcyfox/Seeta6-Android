@@ -26,25 +26,7 @@ import java.util.Map;
 
 public class FileUtils {
 
-    public static void saveImage(Mat bgr, String path, String imageName) {
-        Mat rgba = bgr.clone();
-        Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_BGR2RGBA);
-        Bitmap mBitmap = null;
-        mBitmap = Bitmap.createBitmap(rgba.cols(), rgba.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(rgba, mBitmap);
-        File f = new File(path, imageName);
-        if (f.exists()) {
-            f.delete();
-        }
-        try {
-            FileOutputStream out = new FileOutputStream(f);
-            mBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+
 
     public static boolean isExists(String path, String modelName) {
         File file = new File(path + "/" + modelName);

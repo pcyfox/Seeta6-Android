@@ -10,26 +10,15 @@ import org.opencv.core.Rect;
 public interface Contract {
 
     interface View {
+        void onOpenCameraError(int errorCode);
 
         void drawFaceRect(Rect faceRect);
 
         void drawFaceImage(Bitmap faceBmp);
 
-        void toastMessage(String msg);
-
-        void showCameraUnavailableDialog(int errorCode);
-
-        void setStatus(int status, Mat matBgr, Rect faceRect);
-
         void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String name, Mat matBgr, Rect faceRect);
 
-        void onFaceRegisterFinish(boolean isSuccess, String tip);
-
-        void showSimpleTip(String tip);
-
-        void setBestImage(Bitmap bitmap);
-
-        void setPresenter(Presenter presenter);
+        void onRegisterFaceFinish(boolean isSuccess, String tip);
 
         boolean isActive();
 

@@ -51,7 +51,6 @@ public class MainFragment extends Fragment implements Contract.View {
     @BindView(R.id.txt_name)
     TextView txtTips;
 
-
     @BindView(R.id.txt_state)
     TextView tvfacestatus;
 
@@ -75,7 +74,7 @@ public class MainFragment extends Fragment implements Contract.View {
         @Override
         public void onCameraUnavailable(int errorCode) {
             Log.e(TAG, "camera unavailable, reason=%d" + errorCode);
-            showCameraUnavailableDialog(errorCode);
+            onOpenCameraError(errorCode);
         }
 
         @Override
@@ -85,7 +84,7 @@ public class MainFragment extends Fragment implements Contract.View {
                 mPreviewScaleX = (float) (mCameraPreview.getHeight()) / mPreviewSize.width;
                 mPreviewScaleY = (float) (mCameraPreview.getWidth()) / mPreviewSize.height;
             }
-            mPresenter.detect(data, mPreviewSize.width, mPreviewSize.height, 360-mCameraPreview.getCameraRotation());
+            mPresenter.detect(data, mPreviewSize.width, mPreviewSize.height, 360 - mCameraPreview.getCameraRotation());
         }
     };
 
@@ -138,14 +137,7 @@ public class MainFragment extends Fragment implements Contract.View {
     }
 
     @Override
-    public void toastMessage(String msg) {
-        if (!TextUtils.isEmpty(msg)) {
-            Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void showCameraUnavailableDialog(int errorCode) {
+    public void onOpenCameraError(int errorCode) {
         if (mCameraUnavailableDialog == null) {
             mCameraUnavailableDialog = new AlertDialog.Builder(getActivity()).setTitle("摄像头不可用").setMessage(getContext().getString(R.string.please_restart_device_or_app, errorCode)).setPositiveButton("重试", new DialogInterface.OnClickListener() {
                 @Override
@@ -164,11 +156,6 @@ public class MainFragment extends Fragment implements Contract.View {
         }
     }
 
-    @Override
-    public void setStatus(int status, Mat matBgr, org.opencv.core.Rect faceRect) {
-        Log.i(TAG, "setStatus " + status);
-
-    }
 
     @Override
     public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String name, Mat matBgr, org.opencv.core.Rect faceRect) {
@@ -190,17 +177,11 @@ public class MainFragment extends Fragment implements Contract.View {
                 tvfacestatus.setText("图像过于模糊");
                 break;
         }
-
         txtTips.setText(name);
     }
 
     @Override
-    public void showSimpleTip(String tip) {
-        Toast.makeText(getContext(), tip, Toast.LENGTH_LONG).show();
-    }
-
-    @Override
-    public void onFaceRegisterFinish(boolean isSuccess, String tip) {
+    public void onRegisterFaceFinish(boolean isSuccess, String tip) {
         //提示注册成功
         Toast.makeText(getContext(), tip, Toast.LENGTH_LONG).show();
         //还原EditView
@@ -208,15 +189,6 @@ public class MainFragment extends Fragment implements Contract.View {
         edit_name.setHint("enter name");
     }
 
-    @Override
-    public void setBestImage(Bitmap bitmap) {
-
-    }
-
-    @Override
-    public void setPresenter(Contract.Presenter presenter) {
-        this.mPresenter = presenter;
-    }
 
     @Override
     public boolean isActive() {

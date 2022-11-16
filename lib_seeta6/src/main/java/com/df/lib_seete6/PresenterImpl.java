@@ -56,6 +56,7 @@ public class PresenterImpl implements Contract.Presenter {
 
     private final HandlerThread mFaceTrackThread;
     private final HandlerThread mFasThread;
+
     private int lastRotation;
 
     {
@@ -68,7 +69,6 @@ public class PresenterImpl implements Contract.Presenter {
 
     public PresenterImpl(Contract.View view) {
         mView = view;
-        mView.setPresenter(this);
     }
 
 
@@ -141,10 +141,10 @@ public class PresenterImpl implements Contract.Presenter {
             if (needFaceRegister) {
                 if (EnginHelper.getInstance().startRegister(faceInfo, tempImageData, registeredName)) {
                     final String tip = registeredName + ",注册成功";
-                    new Handler(Looper.getMainLooper()).post(() -> mView.onFaceRegisterFinish(true, tip));
+                    new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterFaceFinish(true, tip));
                 } else {
                     final String tip = registeredName + ",注册失败";
-                    new Handler(Looper.getMainLooper()).post(() -> mView.onFaceRegisterFinish(false, tip));
+                    new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterFaceFinish(false, tip));
                 }
                 needFaceRegister = false;
                 registeredName = "";
@@ -196,13 +196,13 @@ public class PresenterImpl implements Contract.Presenter {
         if (tempMatNv21 == null) {
             tempMatNv21 = new Mat(height + height / 2, width, CvType.CV_8UC1);
         }
-
         if (tempImageData == null || lastRotation != rotation) {
             if (rotation >= 90) {
                 tempImageData = new SeetaImageData(height, width, 3);
             } else {
                 tempImageData = new SeetaImageData(width, height, 3);
             }
+            lastRotation = rotation;
         }
     }
 
@@ -260,6 +260,7 @@ public class PresenterImpl implements Contract.Presenter {
 
     @Override
     public void destroy() {
+        lastRotation = 0;
         if (tempMatNv21 != null) {
             tempMatNv21.release();
             tempMatNv21 = null;

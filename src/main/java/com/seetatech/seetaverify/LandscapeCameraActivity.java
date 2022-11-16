@@ -78,6 +78,11 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
     }
 
     @Override
+    public void onOpenCameraError(int errorCode) {
+
+    }
+
+    @Override
     public void drawFaceRect(Rect faceRect) {
         faceRectView.drawFaceRect(faceRect, previewScaleX, previewScaleY);
     }
@@ -88,48 +93,18 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
     }
 
     @Override
-    public void toastMessage(String msg) {
-
-    }
-
-    @Override
-    public void showCameraUnavailableDialog(int errorCode) {
-
-    }
-
-    @Override
-    public void setStatus(int status, Mat matBgr, Rect faceRect) {
-
-    }
-
-    @Override
     public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String name, Mat matBgr, Rect faceRect) {
 
     }
 
     @Override
-    public void onFaceRegisterFinish(boolean isSuccess, String tip) {
-
-    }
-
-    @Override
-    public void showSimpleTip(String tip) {
-
-    }
-
-    @Override
-    public void setBestImage(Bitmap bitmap) {
-
-    }
-
-    @Override
-    public void setPresenter(Contract.Presenter presenter) {
+    public void onRegisterFaceFinish(boolean isSuccess, String tip) {
 
     }
 
     @Override
     public boolean isActive() {
-        return false;
+        return !isFinishing() || !isDestroyed();
     }
 
 

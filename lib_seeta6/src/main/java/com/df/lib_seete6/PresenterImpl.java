@@ -70,6 +70,9 @@ public class PresenterImpl implements Contract.Presenter {
     private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
         @Override
         public void handleMessage(Message msg) {
+            if (mView == null) {
+                return;
+            }
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
             trackingInfo.matBgr.get(0, 0, imageData.data);
             SeetaRect[] faces = EnginHelper.getInstance().getFaceDetector().Detect(imageData);
@@ -114,6 +117,9 @@ public class PresenterImpl implements Contract.Presenter {
 
         @Override
         public void handleMessage(Message msg) {
+            if (mView == null) {
+                return;
+            }
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
             trackingInfo.matGray = new Mat();
             final Rect faceRect = trackingInfo.faceRect;
@@ -156,11 +162,14 @@ public class PresenterImpl implements Contract.Presenter {
                     }
                 }
             }
-
             final String pickedName = targetName;
             final float similarity = maxSimilarity;
             final FaceAntiSpoofing.Status status = faceAntiSpoofingState;
-            new Handler(Looper.getMainLooper()).post(() -> mView.onDetectFinish(status, similarity, pickedName, trackingInfo.matBgr, faceRect));
+            new Handler(Looper.getMainLooper()).post(() -> {
+                if (mView != null) {
+                    mView.onDetectFinish(status, similarity, pickedName, trackingInfo.matBgr, faceRect);
+                }
+            });
         }
     };
 
@@ -178,6 +187,9 @@ public class PresenterImpl implements Contract.Presenter {
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
+        if (mView == null) {
+            return;
+        }
         if (!EnginHelper.getInstance().isInitOver()) {
             Log.d(TAG, "detect() called fail,engin is  not init!");
             return;

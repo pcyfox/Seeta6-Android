@@ -10,11 +10,10 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.df.lib_seete6.Contract;
-import com.df.lib_seete6.FaceRectView;
+import com.df.lib_seete6.view.FaceRectView;
 import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview;
-import com.df.lib_seete6.config.EnginConfig;
 import com.df.lib_seete6.utils.EnginHelper;
 import com.seeta.sdk.FaceAntiSpoofing;
 
@@ -26,6 +25,7 @@ import java.io.File;
 public class LandscapeCameraActivity extends AppCompatActivity implements Contract.View {
     private CameraPreview cameraPreview;
     private FaceRectView faceRectView;
+
     private PresenterImpl presenter;
 
     private Camera.Size previewSize;
@@ -39,6 +39,7 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
         cameraPreview = findViewById(R.id.camera_preview);
         faceRectView = findViewById(R.id.faceRectView);
         presenter = new PresenterImpl(this);
+
         cameraPreview.setCameraCallbacks(new CameraCallbacks() {
             @Override
             public void onCameraUnavailable(int errorCode) {
@@ -74,11 +75,21 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
         EnginHelper.getInstance().release();
     }
 
     @Override
-    public void onOpenCameraError(int errorCode) {
+    public void onOpenCameraError(int errorCode,String msg) {
+
+    }
+
+    @Override
+    public void onTakePictureFinish() {
 
     }
 
@@ -93,12 +104,12 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
     }
 
     @Override
-    public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String name, Mat matBgr, Rect faceRect) {
+    public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String key, Mat matBgr, Rect faceRect) {
 
     }
 
     @Override
-    public void onRegisterFaceFinish(boolean isSuccess, String tip) {
+    public void onRegisterByFrameFaceFinish(boolean isSuccess, String tip) {
 
     }
 

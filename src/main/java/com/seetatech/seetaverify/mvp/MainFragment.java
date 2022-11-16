@@ -3,10 +3,8 @@ package com.seetatech.seetaverify.mvp;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
-import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +22,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import com.df.lib_seete6.Contract;
-import com.df.lib_seete6.FaceRectView;
+import com.df.lib_seete6.view.FaceRectView;
 import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview2;
@@ -74,7 +72,7 @@ public class MainFragment extends Fragment implements Contract.View {
         @Override
         public void onCameraUnavailable(int errorCode) {
             Log.e(TAG, "camera unavailable, reason=%d" + errorCode);
-            onOpenCameraError(errorCode);
+            onOpenCameraError(errorCode,"");
         }
 
         @Override
@@ -137,7 +135,7 @@ public class MainFragment extends Fragment implements Contract.View {
     }
 
     @Override
-    public void onOpenCameraError(int errorCode) {
+    public void onOpenCameraError(int errorCode,String msg) {
         if (mCameraUnavailableDialog == null) {
             mCameraUnavailableDialog = new AlertDialog.Builder(getActivity()).setTitle("摄像头不可用").setMessage(getContext().getString(R.string.please_restart_device_or_app, errorCode)).setPositiveButton("重试", new DialogInterface.OnClickListener() {
                 @Override
@@ -156,9 +154,15 @@ public class MainFragment extends Fragment implements Contract.View {
         }
     }
 
+    @Override
+    public void onTakePictureFinish() {
+
+    }
+
+
 
     @Override
-    public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String name, Mat matBgr, org.opencv.core.Rect faceRect) {
+    public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String key, Mat matBgr, org.opencv.core.Rect faceRect) {
         //展示名称
         if (!isActive()) {
             return;
@@ -177,11 +181,11 @@ public class MainFragment extends Fragment implements Contract.View {
                 tvfacestatus.setText("图像过于模糊");
                 break;
         }
-        txtTips.setText(name);
+        txtTips.setText(key);
     }
 
     @Override
-    public void onRegisterFaceFinish(boolean isSuccess, String tip) {
+    public void onRegisterByFrameFaceFinish(boolean isSuccess, String tip) {
         //提示注册成功
         Toast.makeText(getContext(), tip, Toast.LENGTH_LONG).show();
         //还原EditView

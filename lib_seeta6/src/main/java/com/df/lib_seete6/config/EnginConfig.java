@@ -9,8 +9,7 @@ public class EnginConfig {
     public float fasThresh = 0.80f;
 
     public boolean isNeedCheckSpoofing = true;
-    public boolean isNeedFaceImage = true;
-
+    public boolean isNeedFaceImage = false;
 
     @Override
     public String toString() {

@@ -141,13 +141,19 @@ public class PresenterImpl implements Contract.Presenter {
             if (needFaceRegister) {
                 if (EnginHelper.getInstance().startRegister(faceInfo, tempImageData, registeredName)) {
                     final String tip = registeredName + ",注册成功";
-                    new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterFaceFinish(true, tip));
+                    new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterByFrameFaceFinish(true, tip));
                 } else {
                     final String tip = registeredName + ",注册失败";
-                    new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterFaceFinish(false, tip));
+                    new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterByFrameFaceFinish(false, tip));
                 }
                 needFaceRegister = false;
                 registeredName = "";
+            }
+
+
+            //特征提取
+            if (EnginHelper.registerName2feats.isEmpty()) {
+                return;
             }
 
             //进行人脸识别
@@ -156,20 +162,19 @@ public class PresenterImpl implements Contract.Presenter {
             //特征点检测
             SeetaPointF[] points = new SeetaPointF[5];
             EnginHelper.getInstance().getFaceLandMarker().mark(tempImageData, faceInfo, points);
-            //特征提取
-            if (!EnginHelper.registerName2feats.isEmpty()) {//不空进行特征提取，并比对
-                FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
-                float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
-                faceRecognizer.Extract(tempImageData, points, feats);
-                for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {
-                    float sim = faceRecognizer.CalculateSimilarity(feats, entry.getValue());
-                    if (sim > maxSimilarity && sim > enginConfig.faceThresh) {
-                        maxSimilarity = sim;
-                        targetName = entry.getKey();
-                        faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
-                    }
+            //不空进行特征提取，并比对
+            FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
+            float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
+            faceRecognizer.Extract(tempImageData, points, feats);
+            for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {
+                float sim = faceRecognizer.CalculateSimilarity(feats, entry.getValue());
+                if (sim > maxSimilarity && sim > enginConfig.faceThresh) {
+                    maxSimilarity = sim;
+                    targetName = entry.getKey();
+                    faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
                 }
             }
+
             final String pickedName = targetName;
             final float similarity = maxSimilarity;
             final FaceAntiSpoofing.Status status = faceAntiSpoofingState;

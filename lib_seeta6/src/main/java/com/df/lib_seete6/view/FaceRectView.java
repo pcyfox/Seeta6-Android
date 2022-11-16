@@ -1,4 +1,4 @@
-package com.df.lib_seete6;
+package com.df.lib_seete6.view;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -17,7 +17,7 @@ import androidx.annotation.WorkerThread;
 public class FaceRectView extends SurfaceView {
     private Paint mFaceRectPaint;
     private final Rect focusRect = new Rect();
-    private SurfaceHolder mOverlapHolder;
+    private final SurfaceHolder mOverlapHolder;
 
     public FaceRectView(Context context) {
         super(context);
@@ -40,18 +40,14 @@ public class FaceRectView extends SurfaceView {
         mFaceRectPaint.setColor(Color.argb(150, 0, 255, 0));
         mFaceRectPaint.setStrokeWidth(3);
         mFaceRectPaint.setStyle(Paint.Style.STROKE);
+
+        mOverlapHolder = getHolder();
+        mOverlapHolder.setFormat(PixelFormat.TRANSLUCENT);
+        setZOrderOnTop(true);
     }
 
     private boolean isActive() {
         return isActivated() || mOverlapHolder != null;
-    }
-
-    @Override
-    protected void onFinishInflate() {
-        super.onFinishInflate();
-        mOverlapHolder = getHolder();
-        mOverlapHolder.setFormat(PixelFormat.TRANSLUCENT);
-        setZOrderOnTop(true);
     }
 
 

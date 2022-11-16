@@ -22,10 +22,16 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".TestActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".LandscapeCameraActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
-
         <activity
             android:name=".MainActivity"
             android:hardwareAccelerated="true"

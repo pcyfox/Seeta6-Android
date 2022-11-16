@@ -3,8 +3,6 @@ package com.seetatech.seetaverify;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -50,7 +48,7 @@ public class LaunchActivity extends AppCompatActivity {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnTest:
-                startActivity(new Intent(this, LandscapeCameraActivity.class));
+                startActivity(new Intent(this, TestActivity.class));
                 break;
             case R.id.btnStart:
                 startActivity(new Intent(this, MainActivity.class));

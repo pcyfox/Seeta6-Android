@@ -54,9 +54,9 @@ public class PresenterImpl implements Contract.Presenter {
         public long lastProcessTime;
     }
 
-
     private final HandlerThread mFaceTrackThread;
     private final HandlerThread mFasThread;
+    private int lastRotation;
 
     {
         mFaceTrackThread = new HandlerThread("FaceTrackThread", Process.THREAD_PRIORITY_MORE_FAVORABLE);
@@ -108,7 +108,7 @@ public class PresenterImpl implements Contract.Presenter {
 
             if (enginConfig.isNeedFaceImage && limitX < tempImageData.width && limitY < tempImageData.height) {
                 Mat faceMatBGR = new Mat(trackingInfo.matBgr, trackingInfo.faceRect);
-                Imgproc.resize(faceMatBGR, faceMatBGR, new Size(200, 240));
+                Imgproc.resize(faceMatBGR, faceMatBGR, new Size(tempImageData.height / 2, tempImageData.width / 2));
                 Mat faceMatBGRA = new Mat();
                 Imgproc.cvtColor(faceMatBGR, faceMatBGRA, Imgproc.COLOR_BGR2RGBA);
                 Bitmap faceBmp = Bitmap.createBitmap(faceMatBGR.width(), faceMatBGR.height(), Bitmap.Config.ARGB_8888);
@@ -195,7 +195,14 @@ public class PresenterImpl implements Contract.Presenter {
     private void initTempData(int width, int height, int rotation) {
         if (tempMatNv21 == null) {
             tempMatNv21 = new Mat(height + height / 2, width, CvType.CV_8UC1);
-            tempImageData = new SeetaImageData(height, width, 3);
+        }
+
+        if (tempImageData == null || lastRotation != rotation) {
+            if (rotation >= 90) {
+                tempImageData = new SeetaImageData(height, width, 3);
+            } else {
+                tempImageData = new SeetaImageData(width, height, 3);
+            }
         }
     }
 
@@ -227,6 +234,7 @@ public class PresenterImpl implements Contract.Presenter {
         }
 //        Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);
 //        Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
+
         Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
 
         if (isNeedTakePic()) {
@@ -252,9 +260,18 @@ public class PresenterImpl implements Contract.Presenter {
 
     @Override
     public void destroy() {
+        if (tempMatNv21 != null) {
+            tempMatNv21.release();
+            tempMatNv21 = null;
+        }
+        if (tempImageData != null) {
+            tempImageData.data = null;
+            tempImageData = null;
+        }
         mFaceTrackThread.quitSafely();
         mFasThread.quitSafely();
         mView = null;
+
     }
 
     private boolean isNeedTakePic() {

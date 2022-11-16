@@ -94,8 +94,10 @@ public class FaceRectView extends SurfaceView {
             faceRect.y *= scaleY;
             faceRect.width *= scaleX;
             faceRect.height *= scaleY;
+
             focusRect.left = faceRect.x;
             focusRect.right = faceRect.x + faceRect.width;
+
             focusRect.top = faceRect.y;
             focusRect.bottom = faceRect.y + faceRect.height;
             canvas.drawRect(focusRect, mFaceRectPaint);

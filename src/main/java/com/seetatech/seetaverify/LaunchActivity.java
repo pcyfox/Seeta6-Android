@@ -49,6 +49,9 @@ public class LaunchActivity extends AppCompatActivity {
 
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.btnTest:
+                startActivity(new Intent(this, LandscapeCameraActivity.class));
+                break;
             case R.id.btnStart:
                 startActivity(new Intent(this, MainActivity.class));
                 break;

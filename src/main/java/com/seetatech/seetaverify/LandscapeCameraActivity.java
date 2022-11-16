@@ -28,7 +28,6 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
     private FaceRectView faceRectView;
     private PresenterImpl presenter;
 
-
     private Camera.Size previewSize;
     private float previewScaleX = 1.0f;
     private float previewScaleY = 1.0f;
@@ -39,7 +38,6 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
         setContentView(R.layout.activity_lanscape_camera);
         cameraPreview = findViewById(R.id.camera_preview);
         faceRectView = findViewById(R.id.faceRectView);
-
         presenter = new PresenterImpl(this);
         cameraPreview.setCameraCallbacks(new CameraCallbacks() {
             @Override
@@ -86,7 +84,7 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
 
     @Override
     public void drawFaceImage(Bitmap faceBmp) {
-
+        faceRectView.drawBitmap(faceBmp, 0, 0, null);
     }
 
     @Override
@@ -136,7 +134,14 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
 
 
     public void onClick(View v) {
-        startRegisterFace();
+        switch (v.getId()) {
+            case R.id.btn_register:
+                startRegisterFace();
+                break;
+            case R.id.btn_take_pic:
+                presenter.takePicture("/sdcard/", "lDetect.jpg");
+                break;
+        }
     }
 
 

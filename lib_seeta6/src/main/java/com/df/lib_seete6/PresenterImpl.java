@@ -35,15 +35,15 @@ public class PresenterImpl implements Contract.Presenter {
     private static final String TAG = "PresenterImpl";
     private Contract.View mView;
     private final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
-    private final int WIDTH = enginConfig.IMAGE_WIDTH;
-    private final int HEIGHT = enginConfig.IMAGE_HEIGHT;
 
-    public SeetaImageData imageData = new SeetaImageData(WIDTH, HEIGHT, 3);
     private boolean needFaceRegister;
     private String registeredName;
 
     private String takePicPath;
     private String takePciName;
+
+    private SeetaImageData tempImageData;
+    private Mat tempMatNv21;
 
     public static class TrackingInfo {
         public Mat matBgr;
@@ -53,6 +53,7 @@ public class PresenterImpl implements Contract.Presenter {
         public long birthTime;
         public long lastProcessTime;
     }
+
 
     private final HandlerThread mFaceTrackThread;
     private final HandlerThread mFasThread;
@@ -78,11 +79,12 @@ public class PresenterImpl implements Contract.Presenter {
                 return;
             }
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
-            trackingInfo.matBgr.get(0, 0, imageData.data);
-            SeetaRect[] faces = EnginHelper.getInstance().getFaceDetector().Detect(imageData);
+            trackingInfo.matBgr.get(0, 0, tempImageData.data);
+            SeetaRect[] faces = EnginHelper.getInstance().getFaceDetector().Detect(tempImageData);
             if (faces.length == 0) {
                 return;
             }
+
             int maxIndex = 0;
             double maxWidth = 0;
             for (int i = 0; i < faces.length; ++i) {
@@ -103,7 +105,8 @@ public class PresenterImpl implements Contract.Presenter {
 
             int limitX = trackingInfo.faceRect.x + trackingInfo.faceRect.width;
             int limitY = trackingInfo.faceRect.y + trackingInfo.faceRect.height;
-            if (limitX < WIDTH && limitY < HEIGHT) {
+
+            if (enginConfig.isNeedFaceImage && limitX < tempImageData.width && limitY < tempImageData.height) {
                 Mat faceMatBGR = new Mat(trackingInfo.matBgr, trackingInfo.faceRect);
                 Imgproc.resize(faceMatBGR, faceMatBGR, new Size(200, 240));
                 Mat faceMatBGRA = new Mat();
@@ -112,6 +115,7 @@ public class PresenterImpl implements Contract.Presenter {
                 Utils.matToBitmap(faceMatBGRA, faceBmp);
                 mView.drawFaceImage(faceBmp);
             }
+
             mFasHandler.removeMessages(0);
             mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
         }
@@ -127,7 +131,7 @@ public class PresenterImpl implements Contract.Presenter {
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
             trackingInfo.matGray = new Mat();
             final Rect faceRect = trackingInfo.faceRect;
-            trackingInfo.matBgr.get(0, 0, imageData.data);
+            trackingInfo.matBgr.get(0, 0, tempImageData.data);
             String targetName = "unknown";
             //注册人脸
             SeetaRect faceInfo = trackingInfo.faceInfo;
@@ -135,7 +139,7 @@ public class PresenterImpl implements Contract.Presenter {
                 return;
             }
             if (needFaceRegister) {
-                if (EnginHelper.getInstance().startRegister(faceInfo, imageData, registeredName)) {
+                if (EnginHelper.getInstance().startRegister(faceInfo, tempImageData, registeredName)) {
                     final String tip = registeredName + ",注册成功";
                     new Handler(Looper.getMainLooper()).post(() -> mView.onFaceRegisterFinish(true, tip));
                 } else {
@@ -151,18 +155,18 @@ public class PresenterImpl implements Contract.Presenter {
             FaceAntiSpoofing.Status faceAntiSpoofingState = FaceAntiSpoofing.Status.UNKNOWN;//初始状态
             //特征点检测
             SeetaPointF[] points = new SeetaPointF[5];
-            EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
+            EnginHelper.getInstance().getFaceLandMarker().mark(tempImageData, faceInfo, points);
             //特征提取
             if (!EnginHelper.registerName2feats.isEmpty()) {//不空进行特征提取，并比对
                 FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
                 float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
-                faceRecognizer.Extract(imageData, points, feats);
+                faceRecognizer.Extract(tempImageData, points, feats);
                 for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {
                     float sim = faceRecognizer.CalculateSimilarity(feats, entry.getValue());
-                    if (sim > maxSimilarity && sim > enginConfig.FACE_THRESH) {
+                    if (sim > maxSimilarity && sim > enginConfig.faceThresh) {
                         maxSimilarity = sim;
                         targetName = entry.getKey();
-                        faceAntiSpoofingState = checkSpoofing(imageData, faceInfo, points);
+                        faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
                     }
                 }
             }
@@ -188,22 +192,33 @@ public class PresenterImpl implements Contract.Presenter {
         return faceAntiSpoofing.Predict(imageData, faceInfo, points);
     }
 
+    private void initTempData(int width, int height, int rotation) {
+        if (tempMatNv21 == null) {
+            tempMatNv21 = new Mat(height + height / 2, width, CvType.CV_8UC1);
+            tempImageData = new SeetaImageData(height, width, 3);
+        }
+    }
+
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
         if (mView == null) {
             return;
         }
+
         if (!EnginHelper.getInstance().isInitOver()) {
             Log.d(TAG, "detect() called fail,engin is  not init!");
             return;
         }
-        EnginHelper.getInstance().matNv21.put(0, 0, data);
+
+        initTempData(width, height, rotation);
+
+        tempMatNv21.put(0, 0, data);
         TrackingInfo trackingInfo = new TrackingInfo();
-        trackingInfo.matBgr = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
+        trackingInfo.matBgr = new Mat(width, height, CvType.CV_8UC3);
         trackingInfo.birthTime = System.currentTimeMillis();
         trackingInfo.lastProcessTime = System.currentTimeMillis();
-        Imgproc.cvtColor(EnginHelper.getInstance().matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
+        Imgproc.cvtColor(tempMatNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 
         if (rotation > 0) {
             // 0表示90度，1表示180度，2表示270度
@@ -212,7 +227,7 @@ public class PresenterImpl implements Contract.Presenter {
         }
 //        Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);
 //        Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
-          Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
+        Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
 
         if (isNeedTakePic()) {
             SeetaUtils.saveImage(trackingInfo.matBgr, takePicPath, takePciName);

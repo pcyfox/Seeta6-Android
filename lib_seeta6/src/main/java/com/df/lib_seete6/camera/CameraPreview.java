@@ -20,6 +20,7 @@ import android.content.Context;
 import android.hardware.Camera;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -28,7 +29,11 @@ import androidx.annotation.Nullable;
 
 import com.df.lib_seete6.constants.ErrorCode;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Camera preview that displays a {@link Camera}.
@@ -40,10 +45,9 @@ import java.util.List;
  */
 @SuppressWarnings("deprecation")
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
-    private static final int CAMERA_ID = 0;
-
+    private static final int CAMERA_ID = 1;
     private static final String TAG = "CameraPreview";
-    private SurfaceHolder mHolder;
+    private final SurfaceHolder mHolder;
     @Nullable
     private Camera mCamera;
     @Nullable
@@ -51,9 +55,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private int mDisplayOrientation;
     private CameraCallbacks mCallbacks;
     private boolean isCreated;
+    private Size wantPreViewSize = new Size(640, 480);
 
-    private OpenCameraAction mOpenCameraAction = new OpenCameraAction();
-    private Runnable mStartPreviewAction = new Runnable() {
+    private final OpenCameraAction mOpenCameraAction = new OpenCameraAction();
+
+    private final Runnable mStartPreviewAction = new Runnable() {
         @Override
         public void run() {
             if (isCreated()) {
@@ -61,12 +67,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
         }
     };
+    private int cameraRotation = 0;
 
     public CameraPreview(Context context) {
         this(context, null);
     }
-
-    ;
 
     public CameraPreview(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -74,10 +79,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public CameraPreview(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        // Install a SurfaceHolder.Callback so we get notified when the
-        // underlying surface is created and destroyed.
         mHolder = getHolder();
         mHolder.addCallback(this);
+    }
+
+    public Size getWantPreViewSize() {
+        return wantPreViewSize;
+    }
+
+    public void setWantPreViewSize(Size wantPreViewSize) {
+        this.wantPreViewSize = wantPreViewSize;
     }
 
     /**
@@ -115,8 +126,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         return result;
     }
 
-    private void setCamera(Camera camera, Camera.CameraInfo cameraInfo,
-                           int displayOrientation) {
+    private void setCamera(Camera camera, Camera.CameraInfo cameraInfo, int displayOrientation) {
+        Log.d(TAG, "setCamera() called with: camera = [" + camera + "], cameraInfo = [" + cameraInfo + "], displayOrientation = [" + displayOrientation + "]");
         mCamera = camera;
         mCameraInfo = cameraInfo;
         mDisplayOrientation = displayOrientation;
@@ -130,21 +141,35 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         return isCreated;
     }
 
+
+    public Camera.Size findBestPreviewSize() {
+        List<Camera.Size> sizes = mCamera.getParameters().getSupportedPreviewSizes();
+        Map<Integer, Camera.Size> tempSize = new HashMap<>();
+
+        for (Camera.Size size : sizes) {
+            if (size.width == wantPreViewSize.getWidth() && size.height == wantPreViewSize.getHeight()) {
+                return size;
+            }
+            int wTotal = wantPreViewSize.getHeight() * wantPreViewSize.getWidth();
+            int total = size.width * size.height;
+            tempSize.put(Math.abs(wTotal - total), size);
+
+        }
+        ArrayList<Integer> dSizeList = new ArrayList<>(tempSize.keySet());
+        Collections.sort(dSizeList);
+        Camera.Size expected = tempSize.get(dSizeList.get(0));
+        return expected;
+    }
+
     private void startPreview(SurfaceHolder holder) {
+        wantPreViewSize = new Size(getWidth(), getHeight());
         // The Surface has been created, now tell the camera where to draw the preview.
         if (mCamera == null || mCameraInfo == null) {
             return;
         }
         try {
             mCamera.setPreviewDisplay(holder);
-            List<Camera.Size> sizes = mCamera.getParameters().getSupportedPreviewSizes();
-            Camera.Size expected = sizes.get(sizes.size() - 1);
-            for (Camera.Size size : sizes) {
-                if (size.width == 1280 && size.height == 720) {
-                    expected = size;
-                    break;
-                }
-            }
+            Camera.Size expected = findBestPreviewSize();
             Log.i(TAG, "Preview size is w:" + expected.width + " h:" + expected.height);
             Camera.Parameters parameters = mCamera.getParameters();
             parameters.setPreviewSize(expected.width, expected.height);
@@ -163,15 +188,20 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void onResume(int rotation) {
+        Log.d(TAG, "onResume() called with: rotation = [" + rotation + "]");
         mOpenCameraAction.setRotation(rotation);
         removeCallbacks(mOpenCameraAction);
-        postDelayed(mOpenCameraAction, 3000L);
+        postDelayed(mOpenCameraAction, 400L);
     }
 
     public void onPause() {
         removeCallbacks(mStartPreviewAction);
         removeCallbacks(mOpenCameraAction);
         stopPreviewAndFreeCamera();
+    }
+
+    public int getCameraRotation() {
+        return cameraRotation;
     }
 
     public int getPreviewWidth() {
@@ -208,7 +238,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Log.i(TAG, "surfaceCreated");
         isCreated = true;
         removeCallbacks(mStartPreviewAction);
-        postDelayed(mStartPreviewAction, 1000);
+        postDelayed(mStartPreviewAction, 500);
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
@@ -238,12 +268,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             // ignore: tried to stop a non-existent preview
             Log.i(TAG, "Error starting camera preview: " + e.getMessage());
         }
-
-        int orientation = calculatePreviewOrientation(mCameraInfo, mDisplayOrientation);
-        mCamera.setDisplayOrientation(orientation);
-
+        handleOrientation();
         removeCallbacks(mStartPreviewAction);
-        postDelayed(mStartPreviewAction, 1000);
+        postDelayed(mStartPreviewAction, 50);
     }
 
     private class OpenCameraAction implements Runnable {
@@ -259,10 +286,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 openCamera();
                 Camera.CameraInfo info = new Camera.CameraInfo();
                 Camera.getCameraInfo(CAMERA_ID, info);
-                setCamera(mCamera, info,
-                        rotation);
+                setCamera(mCamera, info, rotation);
                 removeCallbacks(mStartPreviewAction);
-                postDelayed(mStartPreviewAction, 1000);
+
+                handleOrientation();
+                postDelayed(mStartPreviewAction, 50);
             } catch (Exception e) {
                 e.printStackTrace();
                 if (mCallbacks != null) {
@@ -271,4 +299,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
         }
     }
+
+    private void handleOrientation() {
+        if (mCamera == null) {
+            return;
+        }
+        cameraRotation = calculatePreviewOrientation(mCameraInfo, mDisplayOrientation);
+        mCamera.setDisplayOrientation(cameraRotation);
+    }
+
 }

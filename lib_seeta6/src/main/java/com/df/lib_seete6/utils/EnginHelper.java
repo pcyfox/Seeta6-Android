@@ -29,24 +29,21 @@ import java.util.Map;
 import kotlin.jvm.Volatile;
 
 public class EnginHelper {
-
-    private static final String TAG = "EnginHelper";
-
     static {
         System.loadLibrary("opencv_java3");
     }
 
+    private static final String TAG = "EnginHelper";
+    private EnginConfig enginConfig;
+
+    private final static EnginHelper instance = new EnginHelper();
+
     private EnginHelper() {
     }
-
-    private EnginConfig enginConfig = new EnginConfig();
-    private final static EnginHelper instance = new EnginHelper();
 
     public static EnginHelper getInstance() {
         return instance;
     }
-
-    public Mat matNv21 = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT + enginConfig.CAMERA_PREVIEW_HEIGHT / 2, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
 
     public static Map<String, float[]> registerName2feats = new HashMap<>();
 
@@ -73,19 +70,19 @@ public class EnginHelper {
         return faceAntiSpoofing;
     }
 
-    public boolean isInitOver() {
-        return isInitOver;
-    }
-
-    public void setEnginConfig(EnginConfig enginConfig) {
-        this.enginConfig = enginConfig;
-    }
-
     public EnginConfig getEnginConfig() {
         return enginConfig;
     }
 
-    public void initEngine(Context context, boolean needCheckSpoofing) {
+
+    public boolean isInitOver() {
+        return isInitOver;
+    }
+
+    public void initEngine(Context context, EnginConfig enginConfig) {
+        Log.d(TAG, "initEngine() called with:  enginConfig = [" + enginConfig + "]");
+        this.enginConfig = enginConfig;
+
         String faceModelPath = getInternalCacheDirectory(context, "face").getAbsolutePath();
         String fasModelPath = getInternalCacheDirectory(context, "fas").getAbsolutePath();
 
@@ -126,6 +123,7 @@ public class EnginHelper {
             return;
         }
 
+
         try {
             String rootPath = faceModelPath + "/";
             if (faceDetector == null || faceLandMarker == null || faceRecognizer == null) {
@@ -133,9 +131,9 @@ public class EnginHelper {
                 faceLandMarker = new FaceLandmarker(new SeetaModelSetting(new String[]{rootPath + pdModel}));
                 faceRecognizer = new FaceRecognizer(new SeetaModelSetting(new String[]{rootPath + frModel}));
             }
-            faceDetector.set(Property.PROPERTY_MIN_FACE_SIZE, enginConfig.MIN_FACE_SIZE);
+            faceDetector.set(Property.PROPERTY_MIN_FACE_SIZE, enginConfig.minFaceSize);
 
-            if (faceAntiSpoofing == null && needCheckSpoofing) {
+            if (faceAntiSpoofing == null && enginConfig.isNeedCheckSpoofing) {
                 File fasModelPathFile = new File(fasModelPath);
                 String[] fasModels = fasModelPathFile.list();
                 if (fasModels == null || fasModels.length == 0) {
@@ -144,7 +142,7 @@ public class EnginHelper {
                 }
                 rootPath = fasModelPath + "/";
                 faceAntiSpoofing = new FaceAntiSpoofing(new SeetaModelSetting(new String[]{rootPath + fasModel1, rootPath + fasModel2}));
-                faceAntiSpoofing.SetThreshold(enginConfig.FAS_CLARITY, enginConfig.FAS_THRESH);
+                faceAntiSpoofing.SetThreshold(enginConfig.fasClarity, enginConfig.fasThresh);
             }
             isInitOver = true;
             Log.e(TAG, "-----------init over--------------");
@@ -152,6 +150,12 @@ public class EnginHelper {
         } catch (Exception e) {
             Log.e(TAG, "init exception:" + e);
         }
+    }
+
+    public void initEngine(Context context, boolean needCheckSpoofing) {
+        EnginConfig config = new EnginConfig();
+        config.isNeedCheckSpoofing = needCheckSpoofing;
+        initEngine(context, config);
     }
 
     public static boolean isRegistered(String registeredName) {
@@ -213,10 +217,7 @@ public class EnginHelper {
 
     public void release() {
         isInitOver = false;
-        if (matNv21 != null) {
-            matNv21.release();
-            matNv21 = null;
-        }
+
         if (faceDetector != null) {
             faceDetector.dispose();
             faceDetector = null;

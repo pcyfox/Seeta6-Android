@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="20dp"
-    tools:context=".LanscapeCameraActivity">
+    tools:context=".LandscapeCameraActivity">
 
     <com.df.lib_seete6.camera.CameraPreview
         android:id="@+id/camera_preview"
@@ -16,7 +16,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.df.lib_seete6.FaceRectView
-        android:id="@+id/surfaceViewOverlap"
+        android:id="@+id/faceRectView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_gravity="center_horizontal"

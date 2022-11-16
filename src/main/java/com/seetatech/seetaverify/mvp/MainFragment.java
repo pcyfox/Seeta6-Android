@@ -85,7 +85,7 @@ public class MainFragment extends Fragment implements Contract.View {
                 mPreviewScaleX = (float) (mCameraPreview.getHeight()) / mPreviewSize.width;
                 mPreviewScaleY = (float) (mCameraPreview.getWidth()) / mPreviewSize.height;
             }
-            mPresenter.detect(data, mPreviewSize.width, mPreviewSize.height, mCameraPreview.getCameraRotation());
+            mPresenter.detect(data, mPreviewSize.width, mPreviewSize.height, 360-mCameraPreview.getCameraRotation());
         }
     };
 

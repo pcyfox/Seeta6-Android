@@ -2,7 +2,9 @@ package com.df.lib_seete6.config;
 
 
 public class EnginConfig {
-    public int MIN_FACE_SIZE = 20;
+
+    public int MIN_FACE_SIZE = 80;
+
     public int CAMERA_PREVIEW_WIDTH = 640;
     public int CAMERA_PREVIEW_HEIGHT = 480;
 

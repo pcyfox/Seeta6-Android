@@ -205,9 +205,14 @@ public class PresenterImpl implements Contract.Presenter {
         trackingInfo.lastProcessTime = System.currentTimeMillis();
         Imgproc.cvtColor(EnginHelper.getInstance().matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 
-        Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);
-        Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
-        Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
+        if (rotation > 0) {
+            // 0表示90度，1表示180度，2表示270度
+            int r = (rotation - 90) / 90;
+            Core.rotate(trackingInfo.matBgr, trackingInfo.matBgr, r);
+        }
+//        Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);
+//        Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
+          Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
 
         if (isNeedTakePic()) {
             SeetaUtils.saveImage(trackingInfo.matBgr, takePicPath, takePciName);

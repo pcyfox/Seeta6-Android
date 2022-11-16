@@ -194,19 +194,17 @@ public class PresenterImpl implements Contract.Presenter {
             Log.d(TAG, "detect() called fail,engin is  not init!");
             return;
         }
-        TrackingInfo trackingInfo = new TrackingInfo();
         EnginHelper.getInstance().matNv21.put(0, 0, data);
+        TrackingInfo trackingInfo = new TrackingInfo();
         trackingInfo.matBgr = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC3);
-        trackingInfo.matGray = new Mat();
+        trackingInfo.birthTime = System.currentTimeMillis();
+        trackingInfo.lastProcessTime = System.currentTimeMillis();
+
         Imgproc.cvtColor(EnginHelper.getInstance().matNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 
         Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);
         Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
         Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
-
-        Imgproc.cvtColor(trackingInfo.matBgr, trackingInfo.matGray, Imgproc.COLOR_BGR2GRAY);
-        trackingInfo.birthTime = System.currentTimeMillis();
-        trackingInfo.lastProcessTime = System.currentTimeMillis();
 
         mFaceTrackingHandler.removeMessages(1);
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();

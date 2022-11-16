@@ -16,8 +16,5 @@ public class SeetaApplication extends Application {
     public void onCreate() {
         super.onCreate();
         instance = this;
-        new Thread(() -> {
-            EnginHelper.getInstance().initEngine(this, true);
-        }).start();
     }
 }

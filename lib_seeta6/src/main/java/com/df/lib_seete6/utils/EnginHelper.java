@@ -46,7 +46,7 @@ public class EnginHelper {
         return instance;
     }
 
-    public final Mat matNv21 = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT + enginConfig.CAMERA_PREVIEW_HEIGHT / 2, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
+    public Mat matNv21 = new Mat(enginConfig.CAMERA_PREVIEW_HEIGHT + enginConfig.CAMERA_PREVIEW_HEIGHT / 2, enginConfig.CAMERA_PREVIEW_WIDTH, CvType.CV_8UC1);
 
     public static Map<String, float[]> registerName2feats = new HashMap<>();
 
@@ -212,6 +212,11 @@ public class EnginHelper {
 
 
     public void release() {
+        isInitOver = false;
+        if (matNv21 != null) {
+            matNv21.release();
+            matNv21 = null;
+        }
         if (faceDetector != null) {
             faceDetector.dispose();
             faceDetector = null;

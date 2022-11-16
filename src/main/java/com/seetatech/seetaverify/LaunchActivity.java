@@ -24,10 +24,28 @@ public class LaunchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initEngin();
         setContentView(R.layout.activity_launch);
         requestPermission();
         this.setFinishOnTouchOutside(false);
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        releaseEngine();
+    }
+
+    private void initEngin() {
+        new Thread(() -> {
+            EnginHelper.getInstance().initEngine(this, true);
+        }).start();
+    }
+
+    private void releaseEngine() {
+        EnginHelper.getInstance().release();
+    }
+
 
     public void onClick(View view) {
         switch (view.getId()) {

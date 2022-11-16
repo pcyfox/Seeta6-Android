@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import com.df.lib_seete6.Contract;
+import com.df.lib_seete6.utils.EnginHelper;
 import com.seeta.sdk.FaceAntiSpoofing;
 
 import org.opencv.core.Mat;
@@ -17,6 +18,13 @@ public class LanscapeCameraActivity extends AppCompatActivity implements Contrac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lanscape_camera);
+        initEngin();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        releaseEngine();
     }
 
     @Override
@@ -72,5 +80,16 @@ public class LanscapeCameraActivity extends AppCompatActivity implements Contrac
     @Override
     public boolean isActive() {
         return false;
+    }
+
+
+    private void initEngin() {
+        new Thread(() -> {
+            EnginHelper.getInstance().initEngine(this, true);
+        }).start();
+    }
+
+    private void releaseEngine() {
+        EnginHelper.getInstance().release();
     }
 }

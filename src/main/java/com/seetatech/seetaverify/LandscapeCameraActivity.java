@@ -50,8 +50,8 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
                 if (previewSize == null) {
                     previewSize = camera.getParameters().getPreviewSize();
                     initEngin();
-                    previewScaleX = (float) (cameraPreview.getHeight()) / previewSize.width;
-                    previewScaleY = (float) (cameraPreview.getWidth()) / previewSize.height;
+                    previewScaleY = (float) (cameraPreview.getHeight()) / previewSize.height;
+                    previewScaleX = (float) (cameraPreview.getWidth()) / previewSize.width;
                 }
                 int orientation = cameraPreview.getCameraRotation();
                 presenter.detect(data, previewSize.width, previewSize.height, orientation > 0 ? orientation : -1);

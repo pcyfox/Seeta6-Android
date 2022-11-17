@@ -27,7 +27,6 @@ import java.util.Map;
 public class FileUtils {
 
 
-
     public static boolean isExists(String path, String modelName) {
         File file = new File(path + "/" + modelName);
         return file.exists();
@@ -50,13 +49,21 @@ public class FileUtils {
     public static void copyFromAsset(Context context, String fileName, File dst, boolean overwrite) {
         if (!dst.exists() || overwrite) {
             try {
-                //noinspection ResultOfMethodCallIgnored
                 dst.createNewFile();
                 InputStream in = context.getAssets().open(fileName);
                 FileUtils.copyInStreamToFile(in, dst);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public static boolean makeDirs(String dir) {
+        File pathFile = new File(dir);
+        if (!pathFile.exists()) {
+            return pathFile.mkdirs();
+        } else {
+            return true;
         }
     }
 

@@ -1,7 +1,12 @@
 package com.df.lib_seete6.config;
 
 
+import android.os.Environment;
+
 public class EnginConfig {
+
+    public String modelRootDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/Seeta6";
+
     public int minFaceSize = 80;
     public float faceThresh = 0.70f;
 
@@ -14,11 +19,13 @@ public class EnginConfig {
     @Override
     public String toString() {
         return "EnginConfig{" +
-                "minFaceSize=" + minFaceSize +
+                "modelRootDir='" + modelRootDir + '\'' +
+                ", minFaceSize=" + minFaceSize +
                 ", faceThresh=" + faceThresh +
                 ", fasClarity=" + fasClarity +
                 ", fasThresh=" + fasThresh +
-                ", needCheckSpoofing=" + isNeedCheckSpoofing +
+                ", isNeedCheckSpoofing=" + isNeedCheckSpoofing +
+                ", isNeedFaceImage=" + isNeedFaceImage +
                 '}';
     }
 }

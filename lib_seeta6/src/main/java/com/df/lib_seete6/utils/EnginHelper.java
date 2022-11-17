@@ -6,6 +6,7 @@ import static com.df.lib_seete6.utils.FileUtils.isExists;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.df.lib_seete6.config.EnginConfig;
@@ -79,12 +80,32 @@ public class EnginHelper {
         return isInitOver;
     }
 
+
     public void initEngine(Context context, EnginConfig enginConfig) {
         Log.d(TAG, "initEngine() called with:  enginConfig = [" + enginConfig + "]");
         this.enginConfig = enginConfig;
 
-        String faceModelPath = getInternalCacheDirectory(context, "face").getAbsolutePath();
-        String fasModelPath = getInternalCacheDirectory(context, "fas").getAbsolutePath();
+        String faceModelPath = "";
+        String fasModelPath = "";
+        String modelRootDir = enginConfig.modelRootDir;
+        if (TextUtils.isEmpty(modelRootDir)) {
+            faceModelPath = getInternalCacheDirectory(context, "face").getAbsolutePath();
+            fasModelPath = getInternalCacheDirectory(context, "fas").getAbsolutePath();
+        } else {
+            File modelRootFile = new File(modelRootDir);
+            if (!FileUtils.makeDirs(modelRootDir)) {
+                Log.e(TAG, "initEngine() fail, can't create path:" + modelRootDir);
+                return;
+            }
+            if (!modelRootFile.isDirectory()) {
+                Log.e(TAG, "initEngine() fail, root path is not a dir:" + modelRootDir);
+                return;
+            }
+            faceModelPath = modelRootDir + "/face";
+            fasModelPath = modelRootDir + "/fas";
+            FileUtils.makeDirs(faceModelPath);
+            FileUtils.makeDirs(fasModelPath);
+        }
 
         String fdModel = "face_detector.csta";
         String pdModel = "face_landmarker_pts5.csta";

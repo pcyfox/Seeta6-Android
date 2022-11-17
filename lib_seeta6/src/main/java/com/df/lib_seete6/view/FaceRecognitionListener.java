@@ -12,5 +12,5 @@ public interface FaceRecognitionListener {
 
     void onRegisterByFrameFaceFinish(boolean isSuccess, String tip);
 
-    void onTakePictureFinish();
+    void onTakePictureFinish(String path, String name);
 }

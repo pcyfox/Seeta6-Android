@@ -50,6 +50,13 @@
             android:onClick="onBtnRegisterClick"
             android:text="register" />
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:onClick="onTakePicClick"
+            android:text="take pic" />
+
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 

@@ -43,9 +43,8 @@ import java.util.Map;
  * Implementation is based directly on the documentation at
  * http://developer.android.com/guide/topics/media/camera.html
  */
-@SuppressWarnings("deprecation")
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
-    private static final int CAMERA_ID = 1;
+    private int cameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
     private static final String TAG = "CameraPreview";
     private final SurfaceHolder mHolder;
     @Nullable
@@ -187,8 +186,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    public void onResume(int rotation) {
+    public void onResume(int rotation, int cameraId) {
         Log.d(TAG, "onResume() called with: rotation = [" + rotation + "]");
+        this.cameraId = cameraId;
         mOpenCameraAction.setRotation(rotation);
         removeCallbacks(mOpenCameraAction);
         postDelayed(mOpenCameraAction, 400L);
@@ -215,7 +215,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private void openCamera() throws CameraUnavailableException {
         if (Camera.getNumberOfCameras() > 0) {
             try {
-                mCamera = Camera.open(CAMERA_ID);
+                mCamera = Camera.open(cameraId);
                 assert mCamera != null;
             } catch (Exception e) {
                 throw new CameraUnavailableException(e);
@@ -285,7 +285,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             try {
                 openCamera();
                 Camera.CameraInfo info = new Camera.CameraInfo();
-                Camera.getCameraInfo(CAMERA_ID, info);
+                Camera.getCameraInfo(cameraId, info);
                 setCamera(mCamera, info, rotation);
                 removeCallbacks(mStartPreviewAction);
 

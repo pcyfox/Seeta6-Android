@@ -63,7 +63,7 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
     @Override
     protected void onResume() {
         super.onResume();
-        cameraPreview.onResume(1);
+        cameraPreview.onResume(1,1);
     }
 
     @Override
@@ -84,12 +84,12 @@ public class LandscapeCameraActivity extends AppCompatActivity implements Contra
     }
 
     @Override
-    public void onOpenCameraError(int errorCode,String msg) {
+    public void onOpenCameraError(int errorCode, String msg) {
 
     }
 
     @Override
-    public void onTakePictureFinish() {
+    public void onTakePictureFinish(String path, String name) {
 
     }
 

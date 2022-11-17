@@ -214,10 +214,9 @@ public class PresenterImpl implements Contract.Presenter {
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
-        if (mView == null) {
+        if (mView == null || !mView.isActive()) {
             return;
         }
-
         if (!EnginHelper.getInstance().isInitOver()) {
             Log.d(TAG, "detect() called fail,engin is  not init!");
             return;
@@ -241,9 +240,9 @@ public class PresenterImpl implements Contract.Presenter {
 //        Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
 
         Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
-
         if (isNeedTakePic()) {
             SeetaUtils.saveImage(trackingInfo.matBgr, takePicPath, takePciName);
+            mView.onTakePictureFinish(takePicPath, takePciName);
             takePicPath = takePciName = null;
         }
         mFaceTrackingHandler.removeMessages(1);
@@ -252,8 +251,8 @@ public class PresenterImpl implements Contract.Presenter {
 
     @Override
     public void takePicture(String path, String name) {
-        this.takePciName = name;
         this.takePicPath = path;
+        this.takePciName = name;
     }
 
     @Override

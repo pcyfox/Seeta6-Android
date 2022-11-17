@@ -111,15 +111,15 @@ public class FaceRecognitionView extends FrameLayout implements Contract.View {
     }
 
     @Override
-    public void onTakePictureFinish() {
+    public void onTakePictureFinish(String path, String name) {
         if (faceRecognitionListener != null) {
-            faceRecognitionListener.onTakePictureFinish();
+            faceRecognitionListener.onTakePictureFinish(path, name);
         }
     }
 
     @Override
     public boolean isActive() {
-        return isActivated();
+        return isEnabled();
     }
 
     public CameraPreview getCameraPreview() {
@@ -162,9 +162,14 @@ public class FaceRecognitionView extends FrameLayout implements Contract.View {
         EnginHelper.getInstance().release();
     }
 
-    public void onResume(int rotation) {
-        cameraPreview.onResume(rotation);
+    /**
+     * @param rotation 0:90度 1：180度 2：270度
+     * @param cameraId :Camera.CameraInfo.CAMERA_FACING_FRONT,Camera.CameraInfo.CAMERA_FACING_BACK,
+     */
+    public void onResume(int rotation, int cameraId) {
+        cameraPreview.onResume(rotation, cameraId);
     }
+
 
     public void onPause() {
         cameraPreview.onPause();

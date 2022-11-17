@@ -155,7 +155,7 @@ public class MainFragment extends Fragment implements Contract.View {
     }
 
     @Override
-    public void onTakePictureFinish() {
+    public void onTakePictureFinish(String path, String name) {
 
     }
 

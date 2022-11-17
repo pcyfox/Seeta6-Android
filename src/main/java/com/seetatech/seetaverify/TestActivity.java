@@ -49,7 +49,7 @@ public class TestActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onTakePictureFinish() {
+            public void onTakePictureFinish(String path, String name) {
                 Log.d(TAG, "onTakePictureFinish() called");
 
             }
@@ -59,7 +59,7 @@ public class TestActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        faceRecognitionView.onResume(1);
+        faceRecognitionView.onResume(0, 0);
     }
 
 
@@ -82,6 +82,10 @@ public class TestActivity extends AppCompatActivity {
             return;
         }
         faceRecognitionView.registerByFrame(key);
+    }
+
+    public void onTakePicClick(View v) {
+        faceRecognitionView.takePicture("/sdcard/", "test.jpg");
     }
 
 }

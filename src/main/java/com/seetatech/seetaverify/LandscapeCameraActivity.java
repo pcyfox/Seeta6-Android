@@ -9,7 +9,7 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.Toast;
 
-import com.df.lib_seete6.Contract;
+import com.df.lib_seete6.SeetaContract;
 import com.df.lib_seete6.view.FaceRectView;
 import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.camera.CameraCallbacks;
@@ -22,7 +22,7 @@ import org.opencv.core.Rect;
 
 import java.io.File;
 
-public class LandscapeCameraActivity extends AppCompatActivity implements Contract.View {
+public class LandscapeCameraActivity extends AppCompatActivity implements SeetaContract.ViewInterface {
     private CameraPreview cameraPreview;
     private FaceRectView faceRectView;
 

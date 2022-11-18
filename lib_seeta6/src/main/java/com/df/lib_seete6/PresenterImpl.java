@@ -30,10 +30,10 @@ import org.opencv.imgproc.Imgproc;
 import java.util.Map;
 
 
-public class PresenterImpl implements Contract.Presenter {
+public class PresenterImpl implements SeetaContract.Presenter {
 
     private static final String TAG = "PresenterImpl";
-    private Contract.View mView;
+    private SeetaContract.ViewInterface mView;
     private final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
 
     private boolean needFaceRegister;
@@ -67,7 +67,7 @@ public class PresenterImpl implements Contract.Presenter {
     }
 
 
-    public PresenterImpl(Contract.View view) {
+    public PresenterImpl(SeetaContract.ViewInterface view) {
         mView = view;
     }
 

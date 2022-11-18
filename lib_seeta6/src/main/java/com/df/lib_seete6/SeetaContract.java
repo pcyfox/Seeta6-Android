@@ -3,14 +3,14 @@ package com.df.lib_seete6;
 import android.graphics.Bitmap;
 
 import com.df.lib_seete6.view.FaceRecognitionListener;
-import com.seeta.sdk.FaceAntiSpoofing;
 
-import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
-public interface Contract {
+public interface SeetaContract {
 
-    interface View extends FaceRecognitionListener {
+    interface ViewInterface extends FaceRecognitionListener {
+
+        void onOpenCameraError(int code, String message);
 
         void drawFaceRect(Rect faceRect);
 

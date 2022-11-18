@@ -81,13 +81,14 @@ public class EnginHelper {
     }
 
 
-    public void initEngine(Context context, EnginConfig enginConfig) {
+    public boolean initEngine(Context context, EnginConfig enginConfig) {
         Log.d(TAG, "initEngine() called with:  enginConfig = [" + enginConfig + "]");
         this.enginConfig = enginConfig;
 
-        String faceModelPath = "";
-        String fasModelPath = "";
+        String faceModelPath;
+        String fasModelPath;
         String modelRootDir = enginConfig.modelRootDir;
+
         if (TextUtils.isEmpty(modelRootDir)) {
             faceModelPath = getInternalCacheDirectory(context, "face").getAbsolutePath();
             fasModelPath = getInternalCacheDirectory(context, "fas").getAbsolutePath();
@@ -95,11 +96,11 @@ public class EnginHelper {
             File modelRootFile = new File(modelRootDir);
             if (!FileUtils.makeDirs(modelRootDir)) {
                 Log.e(TAG, "initEngine() fail, can't create path:" + modelRootDir);
-                return;
+                return false;
             }
             if (!modelRootFile.isDirectory()) {
                 Log.e(TAG, "initEngine() fail, root path is not a dir:" + modelRootDir);
-                return;
+                return false;
             }
             faceModelPath = modelRootDir + "/face";
             fasModelPath = modelRootDir + "/fas";
@@ -141,7 +142,7 @@ public class EnginHelper {
         String[] faceModels = faceModelPathFile.list();
         if (faceModels == null || faceModels.length == 0) {
             Log.e(TAG, "init fail,can't find face models");
-            return;
+            return false;
         }
 
 
@@ -159,7 +160,7 @@ public class EnginHelper {
                 String[] fasModels = fasModelPathFile.list();
                 if (fasModels == null || fasModels.length == 0) {
                     Log.e(TAG, "init fail,can't find fas models");
-                    return;
+                    return false;
                 }
                 rootPath = fasModelPath + "/";
                 faceAntiSpoofing = new FaceAntiSpoofing(new SeetaModelSetting(new String[]{rootPath + fasModel1, rootPath + fasModel2}));
@@ -167,16 +168,17 @@ public class EnginHelper {
             }
             isInitOver = true;
             Log.e(TAG, "-----------init over--------------");
-
         } catch (Exception e) {
             Log.e(TAG, "init exception:" + e);
         }
+
+        return isInitOver;
     }
 
-    public void initEngine(Context context, boolean needCheckSpoofing) {
+    public boolean initEngine(Context context, boolean needCheckSpoofing) {
         EnginConfig config = new EnginConfig();
         config.isNeedCheckSpoofing = needCheckSpoofing;
-        initEngine(context, config);
+        return initEngine(context, config);
     }
 
     public static boolean isRegistered(String registeredName) {

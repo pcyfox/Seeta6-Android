@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.df.lib_seete6.Contract;
 import com.df.lib_seete6.view.FaceRecognitionListener;
 import com.df.lib_seete6.view.FaceRecognitionView;
 import com.seeta.sdk.FaceAntiSpoofing;
@@ -32,10 +31,6 @@ public class TestActivity extends AppCompatActivity {
 
         faceRecognitionView.initEngin();
         faceRecognitionView.setFaceRecognitionListener(new FaceRecognitionListener() {
-            @Override
-            public void onOpenCameraError(int code, String message) {
-
-            }
 
             @Override
             public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String key, Mat matBgr, Rect faceRect) {

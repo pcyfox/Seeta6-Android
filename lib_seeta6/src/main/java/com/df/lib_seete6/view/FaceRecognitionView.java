@@ -9,7 +9,7 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.df.lib_seete6.Contract;
+import com.df.lib_seete6.SeetaContract;
 import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview;
@@ -22,7 +22,7 @@ import org.opencv.core.Rect;
 
 import java.io.File;
 
-public class FaceRecognitionView extends FrameLayout implements Contract.View {
+public class FaceRecognitionView extends FrameLayout implements SeetaContract.ViewInterface {
 
     public FaceRecognitionView(@NonNull Context context) {
         super(context);
@@ -91,9 +91,7 @@ public class FaceRecognitionView extends FrameLayout implements Contract.View {
 
     @Override
     public void onOpenCameraError(int code, String message) {
-        if (faceRecognitionListener != null) {
-            faceRecognitionListener.onOpenCameraError(code, message);
-        }
+
     }
 
     @Override

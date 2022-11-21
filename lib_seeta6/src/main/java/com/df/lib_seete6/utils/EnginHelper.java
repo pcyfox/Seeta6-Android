@@ -90,6 +90,7 @@ public class EnginHelper {
         String fasModelPath;
         String modelRootDir = enginConfig.modelRootDir;
 
+
         if (TextUtils.isEmpty(modelRootDir)) {
             faceModelPath = getInternalCacheDirectory(context, "face").getAbsolutePath();
             fasModelPath = getInternalCacheDirectory(context, "fas").getAbsolutePath();
@@ -108,6 +109,12 @@ public class EnginHelper {
             FileUtils.makeDirs(faceModelPath);
             FileUtils.makeDirs(fasModelPath);
         }
+        File faceModelPathFIle = new File(faceModelPath);
+        if (!faceModelPathFIle.exists() || !faceModelPathFIle.canRead()) {
+            Log.e(TAG, "initEngine() fail, can't access file::" + faceModelPath);
+            return false;
+        }
+
 
         String fdModel = "face_detector.csta";
         String pdModel = "face_landmarker_pts5.csta";

@@ -52,6 +52,19 @@ public class PresenterImpl implements SeetaContract.Presenter {
         public Rect faceRect = new Rect();
         public long birthTime;
         public long lastProcessTime;
+
+
+        public void release() {
+            if (matBgr != null) {
+                matBgr.release();
+                matBgr = null;
+            }
+            if (matGray != null) {
+                matGray.release();
+                matGray = null;
+            }
+
+        }
     }
 
     private final HandlerThread mFaceTrackThread;
@@ -82,6 +95,10 @@ public class PresenterImpl implements SeetaContract.Presenter {
             trackingInfo.matBgr.get(0, 0, tempImageData.data);
             SeetaRect[] faces = EnginHelper.getInstance().getFaceDetector().Detect(tempImageData);
             if (faces.length == 0) {
+                if (mView != null) {
+                    mView.drawFaceRect(null);
+                }
+                trackingInfo.release();
                 return;
             }
             int maxIndex = 0;
@@ -127,15 +144,14 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 return;
             }
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
-            trackingInfo.matGray = new Mat();
-            final Rect faceRect = trackingInfo.faceRect;
             trackingInfo.matBgr.get(0, 0, tempImageData.data);
             String targetName = "unknown";
-            //注册人脸
             SeetaRect faceInfo = trackingInfo.faceInfo;
             if (faceInfo.width == 0) {
                 return;
             }
+
+            //注册人脸
             if (needFaceRegister) {
                 if (EnginHelper.getInstance().startRegister(faceInfo, tempImageData, registeredName)) {
                     final String tip = registeredName + ",注册成功";
@@ -148,8 +164,6 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 registeredName = "";
             }
 
-
-            //特征提取
             if (EnginHelper.registerName2feats.isEmpty()) {
                 return;
             }
@@ -179,8 +193,11 @@ public class PresenterImpl implements SeetaContract.Presenter {
             final FaceAntiSpoofing.Status status = faceAntiSpoofingState;
             new Handler(Looper.getMainLooper()).post(() -> {
                 if (mView != null) {
+                    final Rect faceRect = trackingInfo.faceRect;
                     mView.onDetectFinish(status, similarity, pickedName, trackingInfo.matBgr, faceRect);
                 }
+
+                trackingInfo.release();
             });
         }
     };

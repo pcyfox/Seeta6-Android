@@ -19,16 +19,12 @@ public class EnginConfig {
     public boolean isNeedCheckSpoofing = true;
     public boolean isNeedFaceImage = false;
 
+    public boolean isNeedFlipLeftToRight = true; //左右翻转
+    public boolean isNeedFlipUpToDown = false;//上下翻转
+
+
     @Override
     public String toString() {
-        return "EnginConfig{" +
-                "modelRootDir='" + modelRootDir + '\'' +
-                ", minFaceSize=" + minFaceSize +
-                ", faceThresh=" + faceThresh +
-                ", fasClarity=" + fasClarity +
-                ", fasThresh=" + fasThresh +
-                ", isNeedCheckSpoofing=" + isNeedCheckSpoofing +
-                ", isNeedFaceImage=" + isNeedFaceImage +
-                '}';
+        return "EnginConfig{" + "modelRootDir='" + modelRootDir + '\'' + ", minFaceSize=" + minFaceSize + ", faceThresh=" + faceThresh + ", fasClarity=" + fasClarity + ", fasThresh=" + fasThresh + ", isNeedCheckSpoofing=" + isNeedCheckSpoofing + ", isNeedFaceImage=" + isNeedFaceImage + '}';
     }
 }

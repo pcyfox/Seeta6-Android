@@ -252,10 +252,17 @@ public class PresenterImpl implements SeetaContract.Presenter {
             int r = (rotation - 90) / 90;
             Core.rotate(trackingInfo.matBgr, trackingInfo.matBgr, r);
         }
-//        Core.transpose(trackingInfo.matBgr, trackingInfo.matBgr);
-//        Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
 
-        Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
+        EnginConfig config = EnginHelper.getInstance().getEnginConfig();
+        if (config.isNeedFlipUpToDown) {
+            Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
+        }
+
+        if (config.isNeedFlipLeftToRight) {
+            Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 1);
+        }
+
+
         if (isNeedTakePic()) {
             SeetaUtils.saveImage(trackingInfo.matBgr, takePicPath, takePciName);
             mView.onTakePictureFinish(takePicPath, takePciName);

@@ -2,6 +2,7 @@ package com.df.lib_seete6;
 
 
 import android.graphics.Bitmap;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -34,12 +35,11 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
     private static final String TAG = "PresenterImpl";
     private SeetaContract.ViewInterface mView;
-    private final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
 
     private boolean needFaceRegister;
     private String registeredName;
 
-    private String takePicPath;
+    private String takePicPath = Environment.getExternalStorageDirectory().getAbsolutePath();
     private String takePciName;
 
     private SeetaImageData tempImageData;
@@ -84,7 +84,6 @@ public class PresenterImpl implements SeetaContract.Presenter {
             if (faces.length == 0) {
                 return;
             }
-
             int maxIndex = 0;
             double maxWidth = 0;
             for (int i = 0; i < faces.length; ++i) {
@@ -100,13 +99,13 @@ public class PresenterImpl implements SeetaContract.Presenter {
             trackingInfo.faceRect.width = faces[maxIndex].width;
             trackingInfo.faceRect.height = faces[maxIndex].height;
             trackingInfo.lastProcessTime = System.currentTimeMillis();
-
             mView.drawFaceRect(trackingInfo.faceRect);
 
             int limitX = trackingInfo.faceRect.x + trackingInfo.faceRect.width;
             int limitY = trackingInfo.faceRect.y + trackingInfo.faceRect.height;
 
-            if (enginConfig.isNeedFaceImage && limitX < tempImageData.width && limitY < tempImageData.height) {
+            final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
+            if (enginConfig != null && enginConfig.isNeedFaceImage && limitX < tempImageData.width && limitY < tempImageData.height) {
                 Mat faceMatBGR = new Mat(trackingInfo.matBgr, trackingInfo.faceRect);
                 Imgproc.resize(faceMatBGR, faceMatBGR, new Size(tempImageData.height / 2, tempImageData.width / 2));
                 Mat faceMatBGRA = new Mat();
@@ -115,7 +114,6 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 Utils.matToBitmap(faceMatBGRA, faceBmp);
                 mView.drawFaceImage(faceBmp);
             }
-
             mFasHandler.removeMessages(0);
             mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
         }
@@ -166,6 +164,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
             FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
             float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
             faceRecognizer.Extract(tempImageData, points, feats);
+            final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
             for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {
                 float sim = faceRecognizer.CalculateSimilarity(feats, entry.getValue());
                 if (sim > maxSimilarity && sim > enginConfig.faceThresh) {
@@ -247,6 +246,11 @@ public class PresenterImpl implements SeetaContract.Presenter {
         }
         mFaceTrackingHandler.removeMessages(1);
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();
+    }
+
+
+    public void takePicture(String name) {
+        this.takePciName = name;
     }
 
     @Override

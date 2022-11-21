@@ -35,12 +35,10 @@ public class EnginHelper {
     }
 
     private static final String TAG = "EnginHelper";
+
     private EnginConfig enginConfig;
 
     private final static EnginHelper instance = new EnginHelper();
-
-    private EnginHelper() {
-    }
 
     public static EnginHelper getInstance() {
         return instance;
@@ -54,6 +52,9 @@ public class EnginHelper {
     private FaceAntiSpoofing faceAntiSpoofing = null;
     @Volatile
     private boolean isInitOver = false;
+
+    private EnginHelper() {
+    }
 
     public FaceDetector getFaceDetector() {
         return faceDetector;
@@ -144,7 +145,6 @@ public class EnginHelper {
             Log.e(TAG, "init fail,can't find face models");
             return false;
         }
-
 
         try {
             String rootPath = faceModelPath + "/";

@@ -43,7 +43,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
     private String takePciName;
 
     private SeetaImageData tempImageData;
-    private Mat tempMatNv21;
+    private Mat tempMatYUV;
 
     public static class TrackingInfo {
         public Mat matBgr;
@@ -197,8 +197,8 @@ public class PresenterImpl implements SeetaContract.Presenter {
     }
 
     private void initTempData(int width, int height, int rotation) {
-        if (tempMatNv21 == null) {
-            tempMatNv21 = new Mat(height + height / 2, width, CvType.CV_8UC1);
+        if (tempMatYUV == null) {
+            tempMatYUV = new Mat(height + height / 2, width, CvType.CV_8UC1);
         }
         if (tempImageData == null || lastRotation != rotation) {
             if (rotation >= 90) {
@@ -223,12 +223,12 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
         initTempData(width, height, rotation);
 
-        tempMatNv21.put(0, 0, data);
+        tempMatYUV.put(0, 0, data);
         TrackingInfo trackingInfo = new TrackingInfo();
         trackingInfo.matBgr = new Mat(width, height, CvType.CV_8UC3);
         trackingInfo.birthTime = System.currentTimeMillis();
         trackingInfo.lastProcessTime = System.currentTimeMillis();
-        Imgproc.cvtColor(tempMatNv21, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
+        Imgproc.cvtColor(tempMatYUV, trackingInfo.matBgr, Imgproc.COLOR_YUV2BGR_NV21);
 
         if (rotation > 0) {
             // 0表示90度，1表示180度，2表示270度
@@ -269,9 +269,9 @@ public class PresenterImpl implements SeetaContract.Presenter {
     @Override
     public void destroy() {
         lastRotation = 0;
-        if (tempMatNv21 != null) {
-            tempMatNv21.release();
-            tempMatNv21 = null;
+        if (tempMatYUV != null) {
+            tempMatYUV.release();
+            tempMatYUV = null;
         }
         if (tempImageData != null) {
             tempImageData.data = null;

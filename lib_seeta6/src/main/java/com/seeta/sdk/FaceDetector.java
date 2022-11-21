@@ -1,5 +1,8 @@
 package com.seeta.sdk;
 
+import androidx.annotation.Keep;
+
+@Keep
 public class FaceDetector {
     static {
         System.loadLibrary("SeetaFaceDetector600_java");

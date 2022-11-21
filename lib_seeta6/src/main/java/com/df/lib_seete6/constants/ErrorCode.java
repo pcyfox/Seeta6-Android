@@ -1,5 +1,8 @@
 package com.df.lib_seete6.constants;
 
+import androidx.annotation.Keep;
+
+@Keep
 public class ErrorCode {
 
     public static final int CAMERA_UNAVAILABLE_PREVIEW = 1001;

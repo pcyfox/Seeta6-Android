@@ -21,18 +21,15 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
-import com.df.lib_seete6.SeetaContract;
-import com.df.lib_seete6.view.FaceRectView;
 import com.df.lib_seete6.PresenterImpl;
+import com.df.lib_seete6.SeetaContract;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview2;
+import com.df.lib_seete6.view.FaceRectView;
 import com.seeta.sdk.FaceAntiSpoofing;
 import com.seetatech.seetaverify.R;
 
 import org.opencv.core.Mat;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 
 @SuppressWarnings("deprecation")
@@ -40,25 +37,12 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
     public static final String TAG = "MainFragment";
     private static final int REQUEST_CAMERA_PERMISSION = 200;
 
-    @BindView(R.id.camera_preview)
     CameraPreview2 mCameraPreview;
-
-    @BindView(R.id.surfaceViewOverlap)
     protected FaceRectView mOverlap;
-
-    @BindView(R.id.txt_name)
     TextView txtTips;
-
-    @BindView(R.id.txt_state)
     TextView tvfacestatus;
-
-    @BindView(R.id.et_registername)
     EditText edit_name;
-
-    @BindView(R.id.btn_register)
     Button btn_register;
-
-    @BindView(R.id.btn_take_pic)
     Button btn_take_pic;
 
     private SeetaContract.Presenter mPresenter;
@@ -72,7 +56,7 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
         @Override
         public void onCameraUnavailable(int errorCode) {
             Log.e(TAG, "camera unavailable, reason=%d" + errorCode);
-            onOpenCameraError(errorCode,"");
+            onOpenCameraError(errorCode, "");
         }
 
         @Override
@@ -105,8 +89,15 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         Log.i(TAG, "onViewCreated");
         super.onViewCreated(view, savedInstanceState);
-        ButterKnife.bind(this, view);
+        mCameraPreview = getView().findViewById(R.id.camera_preview);
+        mOverlap = getView().findViewById(R.id.surfaceViewOverlap);
+        txtTips = getView().findViewById(R.id.txt_name);
+        tvfacestatus = getView().findViewById(R.id.txt_state);
+        edit_name = getView().findViewById(R.id.et_registername);
+        btn_register = getView().findViewById(R.id.btn_register);
+        btn_take_pic = getView().findViewById(R.id.btn_take_pic);
         mCameraPreview.setCameraCallbacks(mCameraCallbacks);
+
         btn_register.setOnClickListener(view12 -> {
             //人脸注册
             String registeredName = edit_name.getText().toString();
@@ -135,7 +126,7 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
     }
 
     @Override
-    public void onOpenCameraError(int errorCode,String msg) {
+    public void onOpenCameraError(int errorCode, String msg) {
         if (mCameraUnavailableDialog == null) {
             mCameraUnavailableDialog = new AlertDialog.Builder(getActivity()).setTitle("摄像头不可用").setMessage(getContext().getString(R.string.please_restart_device_or_app, errorCode)).setPositiveButton("重试", new DialogInterface.OnClickListener() {
                 @Override
@@ -158,7 +149,6 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
     public void onTakePictureFinish(String path, String name) {
 
     }
-
 
 
     @Override

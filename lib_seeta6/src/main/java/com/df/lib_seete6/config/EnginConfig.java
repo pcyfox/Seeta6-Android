@@ -3,6 +3,9 @@ package com.df.lib_seete6.config;
 
 import android.os.Environment;
 
+import androidx.annotation.Keep;
+
+@Keep
 public class EnginConfig {
 
     public String modelRootDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/Seeta6";

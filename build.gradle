@@ -5,10 +5,42 @@ android {
     defaultConfig {
         applicationId "com.seetatech.fas"
         minSdkVersion 23
-        targetSdkVersion 24
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0.0"
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+
+        signingConfigs {
+            debug {
+                storeFile file('./appKey')
+                storePassword '12345678'
+                keyAlias 'DDG'
+                keyPassword '12345678'
+            }
+            release {
+                storeFile file('./appKey')
+                storePassword '12345678'
+                keyAlias 'DDG'
+                keyPassword '12345678'
+            }
+        }
+        buildTypes {
+            debug {
+                jniDebuggable true
+                jniDebuggable = true
+
+                signingConfig signingConfigs.debug
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            }
+
+            release {
+                signingConfig signingConfigs.release
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            }
+        }
+
 
         ndk {
             abiFilters 'armeabi-v7a'
@@ -24,15 +56,16 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.google.android.material:material:1.4.+'
+    testImplementation 'junit:junit:4.13.2'
     androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    testImplementation 'junit:junit:4.13.2'
-    implementation 'com.jakewharton:butterknife:10.2.3'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.3'
+
+//    implementation 'com.jakewharton:butterknife:10.2.3'
+//    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.3'
+
     implementation project(path: ':lib_seeta6')
 }
 

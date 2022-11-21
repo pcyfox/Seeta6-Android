@@ -2,10 +2,13 @@ package com.df.lib_seete6;
 
 import android.graphics.Bitmap;
 
+import androidx.annotation.Keep;
+
 import com.df.lib_seete6.view.FaceRecognitionListener;
 
 import org.opencv.core.Rect;
 
+@Keep
 public interface SeetaContract {
 
     interface ViewInterface extends FaceRecognitionListener {

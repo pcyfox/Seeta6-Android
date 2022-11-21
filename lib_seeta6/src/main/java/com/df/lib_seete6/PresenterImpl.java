@@ -259,8 +259,10 @@ public class PresenterImpl implements SeetaContract.Presenter {
         if (isNeedTakePic()) {
             SeetaUtils.saveImage(trackingInfo.matBgr, takePicPath, takePciName);
             mView.onTakePictureFinish(takePicPath, takePciName);
-            takePicPath = takePciName = null;
+            takePicPath = null;
+            takePciName = null;
         }
+
         mFaceTrackingHandler.removeMessages(1);
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();
     }

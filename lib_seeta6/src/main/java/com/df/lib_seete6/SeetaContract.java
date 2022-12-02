@@ -31,7 +31,7 @@ public interface SeetaContract {
 
         void detect(byte[] data, int width, int height, int rotation);
 
-        void destroy();
+        boolean destroy();
 
     }
 }

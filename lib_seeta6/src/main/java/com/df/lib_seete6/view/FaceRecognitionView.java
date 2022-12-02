@@ -162,20 +162,25 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         isStartDetected = startDetected;
     }
 
-    public void release() {
-        presenter.destroy();
-        EnginHelper.getInstance().release();
+    public boolean release() {
+        isStartDetected = false;
+        pauseCamera();
+        if (presenter.destroy()) {
+            EnginHelper.getInstance().release();
+            return true;
+        }
+        return false;
     }
 
     /**
      * @param rotation 0:90度 1：180度 2：270度
      * @param cameraId :Camera.CameraInfo.CAMERA_FACING_FRONT,Camera.CameraInfo.CAMERA_FACING_BACK,
      */
-    public void onResume(int rotation, int cameraId) {
+    public void resumeCamera(int rotation, int cameraId) {
         cameraPreview.onResume(rotation, cameraId);
     }
 
-    public void onPause() {
+    public void pauseCamera() {
         cameraPreview.onPause();
     }
 

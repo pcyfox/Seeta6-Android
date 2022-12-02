@@ -58,20 +58,21 @@ public class TestActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        faceRecognitionView.onResume(0, 0);
+        faceRecognitionView.resumeCamera(0, 0);
     }
 
 
     @Override
     protected void onPause() {
         super.onPause();
-        faceRecognitionView.onPause();
+        faceRecognitionView.pauseCamera();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        faceRecognitionView.release();
+        boolean release = faceRecognitionView.release();
+        Log.w(TAG, "---------------onDestroy() called release ret=" + release);
     }
 
 
@@ -85,15 +86,21 @@ public class TestActivity extends AppCompatActivity {
 
     public void onBtnRegisterFromLocalClick(View v) {
         faceRecognitionView.setStartDetected(false);
-        new Thread(() -> {
+        v.postDelayed(() -> new Thread(() -> {
             boolean ret = faceRecognitionView.registerFace("李二狗", new File("/sdcard/李二狗.png"));
             Log.d(TAG, "onBtnRegisterFromLocalClick() called with: ret = [" + ret + "]");
             faceRecognitionView.setStartDetected(true);
-        }).start();
+        }).start(), 300);
+
     }
 
     public void onTakePicClick(View v) {
         faceRecognitionView.takePicture("/sdcard/", "李二狗.png");
+    }
+
+    public void onFinishClick(View c) {
+        faceRecognitionView.setStartDetected(false);
+        c.postDelayed(() -> finish(), 2000);
     }
 
 }

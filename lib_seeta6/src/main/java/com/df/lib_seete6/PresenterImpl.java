@@ -28,8 +28,6 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Map;
 
 
@@ -47,6 +45,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
     private SeetaImageData tempImageData;
     private Mat tempMatYUV;
     private volatile boolean isDetecting = false;
+    private volatile boolean isDestroyed = false;
 
     public static class TrackingInfo {
         public Mat matBgr;
@@ -91,12 +90,14 @@ public class PresenterImpl implements SeetaContract.Presenter {
     private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
         @Override
         public void handleMessage(Message msg) {
-            if (mView == null) {
+            if (isDestroyed || mView == null) {
                 return;
             }
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
             trackingInfo.matBgr.get(0, 0, tempImageData.data);
+            isDetecting = true;
             SeetaRect[] faces = EnginHelper.getInstance().getFaceDetector().Detect(tempImageData);
+            isDetecting = false;
             if (faces.length == 0) {
                 if (mView != null) {
                     mView.drawFaceRect(null);
@@ -148,7 +149,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
         @Override
         public void handleMessage(Message msg) {
-            if (mView == null) {
+            if (isDestroyed || mView == null) {
                 return;
             }
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
@@ -180,6 +181,9 @@ public class PresenterImpl implements SeetaContract.Presenter {
             FaceAntiSpoofing.Status faceAntiSpoofingState = FaceAntiSpoofing.Status.UNKNOWN;//初始状态
             SeetaPointF[] points = new SeetaPointF[5];
             //特征点检测
+            if (isDestroyed) {
+                return;
+            }
             EnginHelper.getInstance().getFaceLandMarker().mark(tempImageData, faceInfo, points);
             FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
             int fSize = faceRecognizer.GetExtractFeatureSize();
@@ -188,11 +192,16 @@ public class PresenterImpl implements SeetaContract.Presenter {
             }
             float[] feats = new float[fSize];
             //特征提取
+            if (isDestroyed) {
+                return;
+            }
             faceRecognizer.Extract(tempImageData, points, feats);
-
             final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
             //不空进行特征提取，并比对
             for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {
+                if (isDestroyed) {
+                    return;
+                }
                 float sim = faceRecognizer.CalculateSimilarity(feats, entry.getValue());
                 if (sim >= enginConfig.faceThresh) {
                     maxSimilarity = sim;
@@ -243,7 +252,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
-        if (mView == null || !mView.isActive()) {
+        if (isDestroyed || mView == null || !mView.isActive()) {
             return;
         }
         if (!EnginHelper.getInstance().isInitOver()) {
@@ -306,20 +315,26 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
 
     @Override
-    public void destroy() {
-        lastRotation = 0;
-        if (tempMatYUV != null) {
-            tempMatYUV.release();
-            tempMatYUV = null;
+    public boolean destroy() {
+        if (isDetecting) {
+            return false;
         }
+        mView = null;
+        isDestroyed = true;
+        lastRotation = 0;
+        mFaceTrackThread.quitSafely();
+        mFasThread.quitSafely();
+
         if (tempImageData != null) {
             tempImageData.data = null;
             tempImageData = null;
         }
-        mFaceTrackThread.quitSafely();
-        mFasThread.quitSafely();
-        mView = null;
 
+        if (tempMatYUV != null) {
+            tempMatYUV.release();
+            tempMatYUV = null;
+        }
+        return true;
     }
 
     private boolean isNeedTakePic() {

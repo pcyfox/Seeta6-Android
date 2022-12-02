@@ -58,7 +58,7 @@ public class TestActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        faceRecognitionView.onResume(1, 0);
+        faceRecognitionView.onResume(0, 0);
     }
 
 
@@ -76,18 +76,24 @@ public class TestActivity extends AppCompatActivity {
 
 
     public void onBtnRegisterClick(View c) {
-//        String key = etRegister.getText().toString();
-//        if (key.isEmpty()) {
-//            return;
-//        }
-//        faceRecognitionView.registerByFrame(key);
-        boolean ret = faceRecognitionView.registerFace("1243", new File("/sdcard/test.jpg"));
+        String key = etRegister.getText().toString();
+        if (key.isEmpty()) {
+            return;
+        }
+        faceRecognitionView.registerByFrame(key);
+    }
 
-        Log.d(TAG, "onBtnRegisterClick() called with: ret = [" + ret + "]");
+    public void onBtnRegisterFromLocalClick(View v) {
+        faceRecognitionView.setStartDetected(false);
+        new Thread(() -> {
+            boolean ret = faceRecognitionView.registerFace("李二狗", new File("/sdcard/李二狗.png"));
+            Log.d(TAG, "onBtnRegisterFromLocalClick() called with: ret = [" + ret + "]");
+            faceRecognitionView.setStartDetected(true);
+        }).start();
     }
 
     public void onTakePicClick(View v) {
-        faceRecognitionView.takePicture("/sdcard/", "李二狗.jpg");
+        faceRecognitionView.takePicture("/sdcard/", "李二狗.png");
     }
 
 }

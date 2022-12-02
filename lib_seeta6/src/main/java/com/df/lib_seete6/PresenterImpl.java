@@ -28,6 +28,8 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Map;
 
 
@@ -44,6 +46,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
     private SeetaImageData tempImageData;
     private Mat tempMatYUV;
+    private volatile boolean isDetecting = false;
 
     public static class TrackingInfo {
         public Mat matBgr;
@@ -116,6 +119,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
             trackingInfo.faceRect.width = faces[maxIndex].width;
             trackingInfo.faceRect.height = faces[maxIndex].height;
             trackingInfo.lastProcessTime = System.currentTimeMillis();
+            //draw face rect
             mView.drawFaceRect(trackingInfo.faceRect);
 
             int limitX = trackingInfo.faceRect.x + trackingInfo.faceRect.width;
@@ -130,6 +134,10 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 Bitmap faceBmp = Bitmap.createBitmap(faceMatBGR.width(), faceMatBGR.height(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(faceMatBGRA, faceBmp);
                 mView.drawFaceImage(faceBmp);
+            }
+
+            if (isDetecting) {
+                return;
             }
             mFasHandler.removeMessages(0);
             mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
@@ -167,21 +175,26 @@ public class PresenterImpl implements SeetaContract.Presenter {
             if (EnginHelper.registerName2feats.isEmpty()) {
                 return;
             }
-
-            //进行人脸识别
+            isDetecting = true;
             float maxSimilarity = 0.0f;
             FaceAntiSpoofing.Status faceAntiSpoofingState = FaceAntiSpoofing.Status.UNKNOWN;//初始状态
-            //特征点检测
             SeetaPointF[] points = new SeetaPointF[5];
+            //特征点检测
             EnginHelper.getInstance().getFaceLandMarker().mark(tempImageData, faceInfo, points);
-            //不空进行特征提取，并比对
             FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
-            float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
+            int fSize = faceRecognizer.GetExtractFeatureSize();
+            if (fSize == 0) {
+                return;
+            }
+            float[] feats = new float[fSize];
+            //特征提取
             faceRecognizer.Extract(tempImageData, points, feats);
+
             final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
+            //不空进行特征提取，并比对
             for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {
                 float sim = faceRecognizer.CalculateSimilarity(feats, entry.getValue());
-                if (sim > maxSimilarity && sim > enginConfig.faceThresh) {
+                if (sim >= enginConfig.faceThresh) {
                     maxSimilarity = sim;
                     targetName = entry.getKey();
                     faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
@@ -191,12 +204,12 @@ public class PresenterImpl implements SeetaContract.Presenter {
             final String pickedName = targetName;
             final float similarity = maxSimilarity;
             final FaceAntiSpoofing.Status status = faceAntiSpoofingState;
+            isDetecting = false;
             new Handler(Looper.getMainLooper()).post(() -> {
                 if (mView != null) {
                     final Rect faceRect = trackingInfo.faceRect;
                     mView.onDetectFinish(status, similarity, pickedName, trackingInfo.matBgr, faceRect);
                 }
-
                 trackingInfo.release();
             });
         }

@@ -43,11 +43,10 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     private CameraPreview cameraPreview;
     private FaceRectView faceRectView;
     private PresenterImpl presenter;
-
     private Camera.Size previewSize;
     private float previewScaleX = 1.0f;
     private float previewScaleY = 1.0f;
-
+    private boolean isStartDetected = true;
     private FaceRecognitionListener faceRecognitionListener;
 
     @Override
@@ -62,6 +61,9 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
 
             @Override
             public void onPreviewFrame(byte[] data, Camera camera) {
+                if (!isStartDetected) {
+                    return;
+                }
                 if (previewSize == null) {
                     previewSize = camera.getParameters().getPreviewSize();
                     previewScaleY = (float) (cameraPreview.getHeight()) / previewSize.height;
@@ -151,6 +153,15 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
 
     public boolean initEngin(EnginConfig config) {
         return EnginHelper.getInstance().initEngine(getContext(), config);
+    }
+
+
+    public boolean isStartDetected() {
+        return isStartDetected;
+    }
+
+    public void setStartDetected(boolean startDetected) {
+        isStartDetected = startDetected;
     }
 
     public void release() {

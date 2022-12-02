@@ -15,6 +15,8 @@ import com.seeta.sdk.FaceAntiSpoofing;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
+import java.io.File;
+
 public class TestActivity extends AppCompatActivity {
     private static final String TAG = "TestActivity";
     private FaceRecognitionView faceRecognitionView;
@@ -28,8 +30,10 @@ public class TestActivity extends AppCompatActivity {
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
         etRegister = findViewById(R.id.et_register_name);
         tvName = findViewById(R.id.tv_name);
+        new Thread(() -> {
+            faceRecognitionView.initEngin();
+        }).start();
 
-        faceRecognitionView.initEngin();
         faceRecognitionView.setFaceRecognitionListener(new FaceRecognitionListener() {
 
             @Override
@@ -54,7 +58,7 @@ public class TestActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        faceRecognitionView.onResume(0, 0);
+        faceRecognitionView.onResume(1, 0);
     }
 
 
@@ -72,15 +76,18 @@ public class TestActivity extends AppCompatActivity {
 
 
     public void onBtnRegisterClick(View c) {
-        String key = etRegister.getText().toString();
-        if (key.isEmpty()) {
-            return;
-        }
-        faceRecognitionView.registerByFrame(key);
+//        String key = etRegister.getText().toString();
+//        if (key.isEmpty()) {
+//            return;
+//        }
+//        faceRecognitionView.registerByFrame(key);
+        boolean ret = faceRecognitionView.registerFace("1243", new File("/sdcard/test.jpg"));
+
+        Log.d(TAG, "onBtnRegisterClick() called with: ret = [" + ret + "]");
     }
 
     public void onTakePicClick(View v) {
-        faceRecognitionView.takePicture("/sdcard/", "test.jpg");
+        faceRecognitionView.takePicture("/sdcard/", "李二狗.jpg");
     }
 
 }

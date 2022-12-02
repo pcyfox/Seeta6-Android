@@ -145,14 +145,12 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         return EnginHelper.getInstance().registerFace(key, faceFile);
     }
 
-    public void initEngin() {
-        initEngin(new EnginConfig());
+    public boolean initEngin() {
+        return initEngin(new EnginConfig());
     }
 
-    public void initEngin(EnginConfig config) {
-        new Thread(() -> {
-            EnginHelper.getInstance().initEngine(getContext(), config);
-        }).start();
+    public boolean initEngin(EnginConfig config) {
+        return EnginHelper.getInstance().initEngine(getContext(), config);
     }
 
     public void release() {

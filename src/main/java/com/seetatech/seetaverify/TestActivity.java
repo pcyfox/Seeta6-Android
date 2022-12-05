@@ -72,7 +72,11 @@ public class TestActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         boolean release = faceRecognitionView.release();
-        Log.w(TAG, "---------------onDestroy() called release ret=" + release);
+        Log.w(TAG, "---------------onDestroy() called release 1 ret=" + release);
+        if (!release) {
+            release = faceRecognitionView.release();
+        }
+        Log.w(TAG, "---------------onDestroy() called release 2 ret=" + release);
     }
 
 
@@ -91,7 +95,6 @@ public class TestActivity extends AppCompatActivity {
             Log.d(TAG, "onBtnRegisterFromLocalClick() called with: ret = [" + ret + "]");
             faceRecognitionView.setStartDetected(true);
         }).start(), 300);
-
     }
 
     public void onTakePicClick(View v) {

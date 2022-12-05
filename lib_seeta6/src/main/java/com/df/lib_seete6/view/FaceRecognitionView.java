@@ -164,7 +164,6 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
 
     public boolean release() {
         isStartDetected = false;
-        pauseCamera();
         if (presenter.destroy()) {
             EnginHelper.getInstance().release();
             return true;

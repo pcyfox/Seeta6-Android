@@ -195,9 +195,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void onPause() {
+        stopPreviewAndFreeCamera();
         removeCallbacks(mStartPreviewAction);
         removeCallbacks(mOpenCameraAction);
-        stopPreviewAndFreeCamera();
     }
 
     public int getCameraRotation() {

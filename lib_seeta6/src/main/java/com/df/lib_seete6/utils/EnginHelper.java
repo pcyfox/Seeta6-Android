@@ -20,9 +20,6 @@ import com.seeta.sdk.SeetaModelSetting;
 import com.seeta.sdk.SeetaPointF;
 import com.seeta.sdk.SeetaRect;
 
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -247,7 +244,6 @@ public class EnginHelper {
 
     public void release() {
         isInitOver = false;
-
         if (faceDetector != null) {
             faceDetector.dispose();
             faceDetector = null;
@@ -262,6 +258,7 @@ public class EnginHelper {
             faceLandMarker.dispose();
             faceLandMarker = null;
         }
+
         if (faceAntiSpoofing != null) {
             faceAntiSpoofing.dispose();
             faceAntiSpoofing = null;

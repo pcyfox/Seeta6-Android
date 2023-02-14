@@ -182,7 +182,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 registeredName = "";
             }
 
-            if (EnginHelper.registerName2feats.isEmpty()) {
+            if (EnginHelper.registerName2feats.isEmpty() && interceptor == null) {
                 return;
             }
             isSearchingFace = true;
@@ -199,11 +199,17 @@ public class PresenterImpl implements SeetaContract.Presenter {
             float[] feats = new float[fSize];
             //特征提取
             faceRecognizer.Extract(tempImageData, points, feats);
+
             if (interceptor != null && interceptor.onExtract(tempImageData)) {
+                isSearchingFace = false;
                 return;
             }
 
-            isSearchingFace = true;
+            if (EnginHelper.registerName2feats.isEmpty()) {
+                isSearchingFace = false;
+                return;
+            }
+
             final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
             //不空进行特征提取，并比对
             for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {

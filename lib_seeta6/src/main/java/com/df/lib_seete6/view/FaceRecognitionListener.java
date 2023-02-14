@@ -1,5 +1,6 @@
 package com.df.lib_seete6.view;
 
+import com.df.lib_seete6.Target;
 import com.seeta.sdk.FaceAntiSpoofing;
 
 import org.opencv.core.Mat;
@@ -7,7 +8,7 @@ import org.opencv.core.Rect;
 
 public interface FaceRecognitionListener {
 
-    void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String key, Mat matBgr, Rect faceRect);
+    void onDetectFinish(Target target, Mat matBgr, Rect faceRect);
 
     void onRegisterByFrameFaceFinish(boolean isSuccess, String tip);
 

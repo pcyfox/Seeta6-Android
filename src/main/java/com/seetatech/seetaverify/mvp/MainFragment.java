@@ -23,6 +23,7 @@ import androidx.fragment.app.Fragment;
 
 import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.SeetaContract;
+import com.df.lib_seete6.Target;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview2;
 import com.df.lib_seete6.view.FaceRectView;
@@ -152,12 +153,12 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
 
 
     @Override
-    public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String key, Mat matBgr, org.opencv.core.Rect faceRect) {
+    public void onDetectFinish(Target target, Mat matBgr, org.opencv.core.Rect faceRect) {
         //展示名称
         if (!isActive()) {
             return;
         }
-        switch (status) {
+        switch (target.getStatus()) {
             case DETECTING:
                 tvfacestatus.setText("检测中");
                 break;
@@ -171,7 +172,7 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
                 tvfacestatus.setText("图像过于模糊");
                 break;
         }
-        txtTips.setText(key);
+        txtTips.setText(target.getKey());
     }
 
     @Override

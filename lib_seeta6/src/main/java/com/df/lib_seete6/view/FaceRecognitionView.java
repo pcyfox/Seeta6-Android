@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import com.df.lib_seete6.ExtractFaceResultInterceptor;
 import com.df.lib_seete6.SeetaContract;
 import com.df.lib_seete6.PresenterImpl;
+import com.df.lib_seete6.Target;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview;
 import com.df.lib_seete6.config.EnginConfig;
@@ -98,9 +99,9 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     }
 
     @Override
-    public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String key, Mat matBgr, Rect faceRect) {
+    public void onDetectFinish(Target target, Mat matBgr, Rect faceRect) {
         if (faceRecognitionListener != null) {
-            faceRecognitionListener.onDetectFinish(status, similarity, key, matBgr, faceRect);
+            faceRecognitionListener.onDetectFinish(target, matBgr, faceRect);
         }
     }
 

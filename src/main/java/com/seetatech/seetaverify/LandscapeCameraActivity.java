@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.df.lib_seete6.SeetaContract;
+import com.df.lib_seete6.Target;
 import com.df.lib_seete6.view.FaceRectView;
 import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.camera.CameraCallbacks;
@@ -63,7 +64,7 @@ public class LandscapeCameraActivity extends AppCompatActivity implements SeetaC
     @Override
     protected void onResume() {
         super.onResume();
-        cameraPreview.onResume(1,1);
+        cameraPreview.onResume(1, 1);
     }
 
     @Override
@@ -104,7 +105,7 @@ public class LandscapeCameraActivity extends AppCompatActivity implements SeetaC
     }
 
     @Override
-    public void onDetectFinish(FaceAntiSpoofing.Status status, float similarity, String key, Mat matBgr, Rect faceRect) {
+    public void onDetectFinish(Target target, Mat matBgr, Rect faceRect) {
 
     }
 

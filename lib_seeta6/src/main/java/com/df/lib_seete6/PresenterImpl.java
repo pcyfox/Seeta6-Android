@@ -2,6 +2,7 @@ package com.df.lib_seete6;
 
 
 import android.graphics.Bitmap;
+import android.nfc.Tag;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -187,7 +188,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
             }
             isSearchingFace = true;
             float maxSimilarity = 0.0f;
-            FaceAntiSpoofing.Status faceAntiSpoofingState = FaceAntiSpoofing.Status.UNKNOWN;//初始状态
+            FaceAntiSpoofing.Status faceAntiSpoofingState = null;
             SeetaPointF[] points = new SeetaPointF[5];
             //特征点检测
             EnginHelper.getInstance().getFaceLandMarker().mark(tempImageData, faceInfo, points);
@@ -201,7 +202,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
             //特征提取
             faceRecognizer.Extract(tempImageData, points, feats);
 
-            if (interceptor != null && EnginHelper.registerName2feats.isEmpty()) {
+            if (interceptor != null) {
                 faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
                 if (interceptor.onExtractFeats(feats, faceAntiSpoofingState)) {
                     isSearchingFace = false;
@@ -209,30 +210,21 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 }
             }
 
-
-            if (EnginHelper.registerName2feats.isEmpty()) {
+            final Target target = findTarget(faceRecognizer, feats);
+            if (target == null) {
                 isSearchingFace = false;
                 return;
             }
 
-            final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
-            //不空进行特征提取，并比对
-            for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {
-                float sim = faceRecognizer.CalculateSimilarity(feats, entry.getValue());
-                if (sim >= enginConfig.faceThresh) {
-                    maxSimilarity = sim;
-                    targetName = entry.getKey();
-                    faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
-                }
+            if (faceAntiSpoofingState == null) {
+                faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
             }
 
-            final String pickedName = targetName;
-            final float similarity = maxSimilarity;
-            final FaceAntiSpoofing.Status status = faceAntiSpoofingState;
+            target.setStatus(faceAntiSpoofingState);
             new Handler(Looper.getMainLooper()).post(() -> {
                 if (mView != null) {
                     final Rect faceRect = trackingInfo.faceRect;
-                    mView.onDetectFinish(status, similarity, pickedName, trackingInfo.matBgr, faceRect);
+                    mView.onDetectFinish(target, trackingInfo.matBgr, faceRect);
                 }
                 trackingInfo.release();
             });
@@ -240,6 +232,23 @@ public class PresenterImpl implements SeetaContract.Presenter {
             isSearchingFace = false;
         }
     };
+
+
+    public Target findTarget(FaceRecognizer faceRecognizer, float[] feats) {
+        if (EnginHelper.registerName2feats.isEmpty()) {
+            return null;
+        }
+        final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
+        //不空进行特征提取，并比对
+        for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {
+            float sim = faceRecognizer.CalculateSimilarity(feats, entry.getValue());
+            if (sim >= enginConfig.faceThresh) {
+                return new Target(sim, entry.getKey());
+            }
+        }
+        return null;
+    }
+
 
     /**
      * 活体检测

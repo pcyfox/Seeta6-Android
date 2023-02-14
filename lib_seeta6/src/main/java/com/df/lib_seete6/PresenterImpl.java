@@ -200,7 +200,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
             //特征提取
             faceRecognizer.Extract(tempImageData, points, feats);
 
-            if (interceptor != null && interceptor.onExtract(tempImageData)) {
+            if (interceptor != null && interceptor.onExtractFeats(feats)) {
                 isSearchingFace = false;
                 return;
             }

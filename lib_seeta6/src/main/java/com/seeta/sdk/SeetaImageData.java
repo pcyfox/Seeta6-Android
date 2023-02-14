@@ -7,10 +7,10 @@ public class SeetaImageData {
         this.height = height;
         this.channels = channels;
     }
-
     public SeetaImageData(int width, int height) {
         this(width, height, 1);
     }
+
 
     public byte[] data;
     public int width;

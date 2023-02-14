@@ -48,6 +48,8 @@ public class PresenterImpl implements SeetaContract.Presenter {
     private volatile boolean isDestroyed = false;
     private volatile boolean isSearchingFace = false;
 
+    private ExtractFaceResultInterceptor interceptor;
+
     public static class TrackingInfo {
         public Mat matBgr;
         public Mat matGray;
@@ -87,6 +89,10 @@ public class PresenterImpl implements SeetaContract.Presenter {
         mView = view;
     }
 
+
+    public void setInterceptor(ExtractFaceResultInterceptor interceptor) {
+        this.interceptor = interceptor;
+    }
 
     private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
         @Override
@@ -190,10 +196,14 @@ public class PresenterImpl implements SeetaContract.Presenter {
             if (fSize == 0) {
                 return;
             }
-            isSearchingFace = true;
             float[] feats = new float[fSize];
             //特征提取
             faceRecognizer.Extract(tempImageData, points, feats);
+            if (interceptor != null && interceptor.onExtract(tempImageData)) {
+                return;
+            }
+
+            isSearchingFace = true;
             final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
             //不空进行特征提取，并比对
             for (Map.Entry<String, float[]> entry : EnginHelper.registerName2feats.entrySet()) {

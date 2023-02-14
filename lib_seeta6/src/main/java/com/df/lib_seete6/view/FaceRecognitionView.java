@@ -9,6 +9,7 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.df.lib_seete6.ExtractFaceResultInterceptor;
 import com.df.lib_seete6.SeetaContract;
 import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.camera.CameraCallbacks;
@@ -122,6 +123,11 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         return isEnabled();
     }
 
+
+    public PresenterImpl getPresenter() {
+        return presenter;
+    }
+
     public CameraPreview getCameraPreview() {
         return cameraPreview;
     }
@@ -152,6 +158,13 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
 
     public boolean initEngin(EnginConfig config) {
         return EnginHelper.getInstance().initEngine(getContext(), config);
+    }
+
+
+    public void setInterceptor(ExtractFaceResultInterceptor interceptor) {
+        if (presenter != null) {
+            presenter.setInterceptor(interceptor);
+        }
     }
 
     public boolean isStartDetected() {

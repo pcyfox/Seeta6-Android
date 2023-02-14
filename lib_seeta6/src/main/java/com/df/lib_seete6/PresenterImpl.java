@@ -192,6 +192,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
             //特征点检测
             EnginHelper.getInstance().getFaceLandMarker().mark(tempImageData, faceInfo, points);
             FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
+
             int fSize = faceRecognizer.GetExtractFeatureSize();
             if (fSize == 0) {
                 return;
@@ -200,10 +201,14 @@ public class PresenterImpl implements SeetaContract.Presenter {
             //特征提取
             faceRecognizer.Extract(tempImageData, points, feats);
 
-            if (interceptor != null && interceptor.onExtractFeats(feats)) {
-                isSearchingFace = false;
-                return;
+            if (interceptor != null && EnginHelper.registerName2feats.isEmpty()) {
+                faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
+                if (interceptor.onExtractFeats(feats, faceAntiSpoofingState)) {
+                    isSearchingFace = false;
+                    return;
+                }
             }
+
 
             if (EnginHelper.registerName2feats.isEmpty()) {
                 isSearchingFace = false;

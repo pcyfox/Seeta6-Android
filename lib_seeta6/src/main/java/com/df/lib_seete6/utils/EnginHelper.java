@@ -224,7 +224,7 @@ public class EnginHelper {
             return false;
         }
         if (EnginHelper.isRegistered(registeredName)) {
-            return false;
+            EnginHelper.registerName2feats.remove(registeredName);
         }
         FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
         float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];

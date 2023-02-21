@@ -20,6 +20,10 @@
         android:largeHeap="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <activity
+            android:name=".TestDialogActivity"
+            android:exported="false" />
         <activity
             android:name=".TestActivity"
             android:exported="false" />
@@ -28,6 +32,7 @@
             android:name=".LandscapeCameraActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
+
         <activity
             android:name=".MainActivity"
             android:hardwareAccelerated="true"

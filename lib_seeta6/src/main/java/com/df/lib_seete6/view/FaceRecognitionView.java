@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ import org.opencv.core.Rect;
 import java.io.File;
 
 public class FaceRecognitionView extends FrameLayout implements SeetaContract.ViewInterface {
+    private static final String TAG = "FaceRecognitionView";
 
     public FaceRecognitionView(@NonNull Context context) {
         super(context);
@@ -44,12 +46,16 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
 
     private CameraPreview cameraPreview;
     private FaceRectView faceRectView;
-    private PresenterImpl presenter;
+    private final PresenterImpl presenter;
     private Camera.Size previewSize;
     private float previewScaleX = 1.0f;
     private float previewScaleY = 1.0f;
     private volatile boolean isStartDetected = true;
     private FaceRecognitionListener faceRecognitionListener;
+
+    {
+        presenter = new PresenterImpl(this);
+    }
 
     @Override
     protected void onFinishInflate() {
@@ -66,20 +72,21 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
                 if (!isStartDetected) {
                     return;
                 }
+
                 if (previewSize == null) {
                     previewSize = camera.getParameters().getPreviewSize();
                     previewScaleY = (float) (cameraPreview.getHeight()) / previewSize.height;
                     previewScaleX = (float) (cameraPreview.getWidth()) / previewSize.width;
                 }
+
                 int orientation = cameraPreview.getCameraRotation();
                 presenter.detect(data, previewSize.width, previewSize.height, orientation > 0 ? orientation : -1);
             }
         });
-
+        presenter.resume(this);
         faceRectView = new FaceRectView(getContext());
         addView(cameraPreview, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         addView(faceRectView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-        presenter = new PresenterImpl(this);
     }
 
 
@@ -95,6 +102,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
 
     @Override
     public void onOpenCameraError(int code, String message) {
+        Log.d(TAG, "onOpenCameraError() called with: code = [" + code + "], message = [" + message + "]");
 
     }
 
@@ -123,7 +131,6 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     public boolean isActive() {
         return isEnabled();
     }
-
 
     public PresenterImpl getPresenter() {
         return presenter;
@@ -158,7 +165,20 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     }
 
     public boolean initEngin(EnginConfig config) {
-        return EnginHelper.getInstance().initEngine(getContext(), config);
+        if (EnginHelper.getInstance().isInitOver()) {
+            resume();
+            return true;
+        }
+        boolean ret = EnginHelper.getInstance().initEngine(getContext(), config);
+        resume();
+        return ret;
+    }
+
+    private void resume() {
+        if (presenter != null) {
+            presenter.resume(this);
+        }
+        isStartDetected = true;
     }
 
 

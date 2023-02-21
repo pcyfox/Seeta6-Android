@@ -98,10 +98,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
      */
     public static int calculatePreviewOrientation(Camera.CameraInfo info, int rotation) {
         int degrees = 0;
-
         switch (rotation) {
             case Surface.ROTATION_0:
-                degrees = 0;
                 break;
             case Surface.ROTATION_90:
                 degrees = 90;
@@ -231,6 +229,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera.setPreviewCallback(null);
             mCamera.release();
             mCamera = null;
+            mHolder.getSurface().release();
         }
     }
 

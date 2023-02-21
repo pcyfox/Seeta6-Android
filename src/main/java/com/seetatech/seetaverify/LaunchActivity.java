@@ -56,6 +56,8 @@ public class LaunchActivity extends AppCompatActivity {
             case R.id.btnRegisterFace:
                 startRegisterFace();
                 break;
+            case R.id.btnTestDialog:
+                startActivity(new Intent(this, TestDialogActivity.class));
         }
     }
 

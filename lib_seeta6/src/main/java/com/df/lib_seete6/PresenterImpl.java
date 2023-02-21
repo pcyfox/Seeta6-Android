@@ -29,6 +29,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+import java.util.Arrays;
 import java.util.Map;
 
 
@@ -37,8 +38,12 @@ public class PresenterImpl implements SeetaContract.Presenter {
     private static final String TAG = "PresenterImpl";
     private SeetaContract.ViewInterface mView;
 
+    private float[] feats = new float[1024];
+
     private boolean needFaceRegister;
     private String registeredName;
+
+    private boolean isNeedDestroy = false;
 
     private String takePicPath = Environment.getExternalStorageDirectory().getAbsolutePath();
     private String takePciName;
@@ -88,6 +93,15 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
     public PresenterImpl(SeetaContract.ViewInterface view) {
         mView = view;
+        resume(view);
+    }
+
+    public void resume(SeetaContract.ViewInterface view) {
+        this.mView = view;
+        isDestroyed = false;
+        isSearchingFace = false;
+        isDetecting = false;
+        isNeedDestroy = false;
     }
 
 
@@ -98,9 +112,11 @@ public class PresenterImpl implements SeetaContract.Presenter {
     private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
         @Override
         public void handleMessage(Message msg) {
-            if (isDestroyed || mView == null) {
+            if (isNeedDestroy || isDestroyed || mView == null) {
+                checkState();
                 return;
             }
+
             isDetecting = true;
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
             trackingInfo.matBgr.get(0, 0, tempImageData.data);
@@ -114,6 +130,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 isDetecting = false;
                 return;
             }
+
             int maxIndex = 0;
             double maxWidth = 0;
             for (int i = 0; i < faces.length; ++i) {
@@ -145,11 +162,12 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 Utils.matToBitmap(faceMatBGRA, faceBmp);
                 mView.drawFaceImage(faceBmp);
             }
+            isDetecting = false;
             if (!isSearchingFace) {
                 mFasHandler.removeMessages(0);
                 mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
             }
-            isDetecting = false;
+            checkState();
         }
     };
 
@@ -157,16 +175,15 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
         @Override
         public void handleMessage(Message msg) {
-            if (isDetecting || isDestroyed || mView == null) {
+            if (isNeedDestroy || isDetecting || isDestroyed || mView == null) {
+                checkState();
                 return;
             }
 
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
             trackingInfo.matBgr.get(0, 0, tempImageData.data);
-            String targetName = "unknown";
             SeetaRect faceInfo = trackingInfo.faceInfo;
             if (faceInfo.width == 0) {
-
                 return;
             }
 
@@ -187,7 +204,6 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 return;
             }
             isSearchingFace = true;
-            float maxSimilarity = 0.0f;
             FaceAntiSpoofing.Status faceAntiSpoofingState = null;
             SeetaPointF[] points = new SeetaPointF[5];
             //特征点检测
@@ -196,23 +212,40 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
             int fSize = faceRecognizer.GetExtractFeatureSize();
             if (fSize == 0) {
+                isSearchingFace = false;
                 return;
             }
-            float[] feats = new float[fSize];
+
+            if (feats.length == fSize) {
+                Arrays.fill(feats, 0);
+            } else {
+                feats = new float[fSize];
+            }
+
+            if (isNeedDestroy || isDestroyed || feats == null || feats.length < fSize) {
+                cancelSearchTaskOnce();
+                return;
+            }
+
             //特征提取
             faceRecognizer.Extract(tempImageData, points, feats);
 
             if (interceptor != null) {
+                if (isNeedDestroy || isDestroyed) {
+                    cancelSearchTaskOnce();
+                    return;
+                }
+
                 faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
                 if (interceptor.onExtractFeats(feats, faceAntiSpoofingState)) {
-                    isSearchingFace = false;
+                    cancelSearchTaskOnce();
                     return;
                 }
             }
 
             final Target target = findTarget(faceRecognizer, feats);
             if (target == null) {
-                isSearchingFace = false;
+                cancelSearchTaskOnce();
                 return;
             }
 
@@ -229,9 +262,14 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 trackingInfo.release();
             });
 
-            isSearchingFace = false;
+            cancelSearchTaskOnce();
         }
     };
+
+    private void cancelSearchTaskOnce() {
+        isSearchingFace = false;
+        checkState();
+    }
 
 
     public Target findTarget(FaceRecognizer faceRecognizer, float[] feats) {
@@ -278,7 +316,8 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
-        if (isDestroyed || mView == null || !mView.isActive()) {
+        if (isNeedDestroy || isDestroyed || mView == null || !mView.isActive()) {
+            checkState();
             return;
         }
         if (!EnginHelper.getInstance().isInitOver()) {
@@ -316,10 +355,20 @@ public class PresenterImpl implements SeetaContract.Presenter {
             takePciName = null;
         }
 
+        if (isNeedDestroy || isDestroyed || mView == null || !mView.isActive()) {
+            return;
+        }
+
         mFaceTrackingHandler.removeMessages(1);
         mFaceTrackingHandler.obtainMessage(1, trackingInfo).sendToTarget();
     }
 
+
+    private void checkState() {
+        if (isNeedDestroy && !isDetecting && !isSearchingFace) {
+            destroy();
+        }
+    }
 
     public void takePicture(String name) {
         this.takePciName = name;
@@ -340,10 +389,13 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
     @Override
     public boolean destroy() {
+        isDestroyed = true;
+        Log.d(TAG, "destroy() called isDetecting=" + isDestroyed + ",isSearchingFace=" + isSearchingFace);
         if (isDetecting || isSearchingFace) {
             return false;
         }
 
+        isNeedDestroy = false;
         mView = null;
         isDestroyed = true;
 
@@ -359,6 +411,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
             tempMatYUV.release();
             tempMatYUV = null;
         }
+        Log.d(TAG, "--------------destroy() over!--------------");
         return true;
     }
 

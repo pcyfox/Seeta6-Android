@@ -78,18 +78,22 @@ public class PresenterImpl implements SeetaContract.Presenter {
         }
     }
 
-    private final HandlerThread mFaceTrackThread;
-    private final HandlerThread mFasThread;
+    private HandlerThread mFaceTrackThread;
+    private HandlerThread mFasThread;
 
     private int lastRotation;
 
     {
+        init();
+    }
+
+
+    private void init() {
         mFaceTrackThread = new HandlerThread("FaceTrackThread", Process.THREAD_PRIORITY_MORE_FAVORABLE);
         mFasThread = new HandlerThread("FasThread", Process.THREAD_PRIORITY_MORE_FAVORABLE);
         mFaceTrackThread.start();
         mFasThread.start();
     }
-
 
     public PresenterImpl(SeetaContract.ViewInterface view) {
         mView = view;
@@ -98,6 +102,9 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
     public void resume(SeetaContract.ViewInterface view) {
         this.mView = view;
+        if (isDestroyed) {
+            init();
+        }
         isDestroyed = false;
         isSearchingFace = false;
         isDetecting = false;
@@ -216,7 +223,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 return;
             }
 
-            if (feats.length == fSize) {
+            if (feats.length >= fSize) {
                 Arrays.fill(feats, 0);
             } else {
                 feats = new float[fSize];
@@ -238,6 +245,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
                 faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
                 if (interceptor.onExtractFeats(feats, faceAntiSpoofingState)) {
+                    trackingInfo.release();
                     cancelSearchTaskOnce();
                     return;
                 }

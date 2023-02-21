@@ -38,7 +38,7 @@ public class FaceDialog extends AppCompatDialog {
         setContentView(R.layout.dialog_face);
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
         assert faceRecognitionView != null;
-        faceRecognitionView.setInterceptor((feats, status) -> false);
+        faceRecognitionView.setInterceptor((feats, status) -> true);
         faceRecognitionView.setFaceRecognitionListener(new FaceRecognitionListener() {
             @Override
             public void onDetectFinish(Target target, Mat matBgr, Rect faceRect) {

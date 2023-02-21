@@ -165,16 +165,14 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     }
 
     public boolean initEngin(EnginConfig config) {
+        Log.d(TAG, "initEngin() called with: config = [" + config + "]");
         if (EnginHelper.getInstance().isInitOver()) {
-            resume();
             return true;
         }
-        boolean ret = EnginHelper.getInstance().initEngine(getContext(), config);
-        resume();
-        return ret;
+        return EnginHelper.getInstance().initEngine(getContext(), config);
     }
 
-    private void resume() {
+    public void resume() {
         if (presenter != null) {
             presenter.resume(this);
         }
@@ -210,6 +208,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
      * @param cameraId :Camera.CameraInfo.CAMERA_FACING_FRONT,Camera.CameraInfo.CAMERA_FACING_BACK,
      */
     public void resumeCamera(int rotation, int cameraId) {
+        resume();
         cameraPreview.onResume(rotation, cameraId);
     }
 

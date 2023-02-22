@@ -190,7 +190,8 @@ public class PresenterImpl implements SeetaContract.Presenter {
             final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
             trackingInfo.matBgr.get(0, 0, tempImageData.data);
             SeetaRect faceInfo = trackingInfo.faceInfo;
-            if (faceInfo.width == 0) {
+
+            if (faceInfo.width == 0 || interceptor != null && interceptor.onPrepare(faceInfo)) {
                 return;
             }
 
@@ -229,20 +230,18 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 feats = new float[fSize];
             }
 
-            if (isNeedDestroy || isDestroyed || feats == null || feats.length < fSize) {
+            if (isNeedDestroy || isDestroyed) {
                 cancelSearchTaskOnce();
                 return;
             }
 
             //特征提取
             faceRecognizer.Extract(tempImageData, points, feats);
-
             if (interceptor != null) {
                 if (isNeedDestroy || isDestroyed) {
                     cancelSearchTaskOnce();
                     return;
                 }
-
                 faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
                 if (interceptor.onExtractFeats(feats, faceAntiSpoofingState)) {
                     trackingInfo.release();

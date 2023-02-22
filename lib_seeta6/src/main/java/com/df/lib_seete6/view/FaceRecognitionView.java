@@ -18,7 +18,6 @@ import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview;
 import com.df.lib_seete6.config.EnginConfig;
 import com.df.lib_seete6.utils.EnginHelper;
-import com.seeta.sdk.FaceAntiSpoofing;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -172,13 +171,16 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         return EnginHelper.getInstance().initEngine(getContext(), config);
     }
 
-    public void resume() {
+    public void resumeDetect() {
         if (presenter != null) {
             presenter.resume(this);
         }
         isStartDetected = true;
     }
 
+    public void pauseDetect() {
+        isStartDetected = false;
+    }
 
     public void setInterceptor(ExtractFaceResultInterceptor interceptor) {
         if (presenter != null) {
@@ -190,9 +192,6 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         return isStartDetected;
     }
 
-    public void setStartDetected(boolean startDetected) {
-        isStartDetected = startDetected;
-    }
 
     public boolean release() {
         isStartDetected = false;
@@ -208,7 +207,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
      * @param cameraId :Camera.CameraInfo.CAMERA_FACING_FRONT,Camera.CameraInfo.CAMERA_FACING_BACK,
      */
     public void resumeCamera(int rotation, int cameraId) {
-        resume();
+        resumeDetect();
         cameraPreview.onResume(rotation, cameraId);
     }
 

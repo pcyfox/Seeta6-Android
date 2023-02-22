@@ -89,11 +89,11 @@ public class TestActivity extends AppCompatActivity {
     }
 
     public void onBtnRegisterFromLocalClick(View v) {
-        faceRecognitionView.setStartDetected(false);
+        faceRecognitionView.pauseDetect();
         v.postDelayed(() -> new Thread(() -> {
             boolean ret = faceRecognitionView.registerFace("李二狗", new File("/sdcard/李二狗.png"));
             Log.d(TAG, "onBtnRegisterFromLocalClick() called with: ret = [" + ret + "]");
-            faceRecognitionView.setStartDetected(true);
+            faceRecognitionView.resumeDetect();
         }).start(), 300);
     }
 
@@ -102,7 +102,7 @@ public class TestActivity extends AppCompatActivity {
     }
 
     public void onFinishClick(View c) {
-        faceRecognitionView.setStartDetected(false);
+        faceRecognitionView.pauseDetect();
         c.postDelayed(() -> finish(), 2000);
     }
 

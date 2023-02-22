@@ -41,18 +41,23 @@ public class FaceDialog extends AppCompatDialog {
         setContentView(R.layout.dialog_face);
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
         assert faceRecognitionView != null;
-        faceRecognitionView.setInterceptor(new ExtractFaceResultInterceptor() {
-            @Override
-            public boolean onPrepare(SeetaRect rect) {
-                Log.d(TAG, "onPrepare() called with: rect = [" + rect + "]");
-                return false;
-            }
-
-            @Override
-            public boolean onExtractFeats(float[] feats, FaceAntiSpoofing.Status status) {
-                return false;
-            }
-        });
+//        faceRecognitionView.setInterceptor(new ExtractFaceResultInterceptor() {
+//            @Override
+//            public boolean onPrepare(SeetaRect rect) {
+//                Log.d(TAG, "onPrepare() called with: rect = [" + rect + "]");
+//                boolean isGoodFace = rect.width * rect.height > 200 * 200;
+//                if (isGoodFace) {
+//                    faceRecognitionView.pauseDetect();
+//                }
+//                return isGoodFace;
+//            }
+//
+//            @Override
+//            public boolean onExtractFeats(float[] feats, FaceAntiSpoofing.Status status) {
+//                Log.d(TAG, "onExtractFeats() called with: feats = [" + feats + "], status = [" + status + "]");
+//                return true;
+//            }
+//        });
 
 
         faceRecognitionView.setFaceRecognitionListener(new FaceRecognitionListener() {

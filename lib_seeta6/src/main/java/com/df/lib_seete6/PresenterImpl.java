@@ -39,6 +39,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
     private SeetaContract.ViewInterface mView;
 
     private float[] feats = new float[1024];
+    private SeetaPointF[] points = new SeetaPointF[5];
 
     private boolean needFaceRegister;
     private String registeredName;
@@ -74,7 +75,6 @@ public class PresenterImpl implements SeetaContract.Presenter {
                 matGray.release();
                 matGray = null;
             }
-
         }
     }
 
@@ -160,14 +160,17 @@ public class PresenterImpl implements SeetaContract.Presenter {
             int limitY = trackingInfo.faceRect.y + trackingInfo.faceRect.height;
 
             final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
-            if (enginConfig != null && enginConfig.isNeedFaceImage && limitX < tempImageData.width && limitY < tempImageData.height) {
+            if (enginConfig != null && enginConfig.isNeedFaceImage && limitX <= tempImageData.width && limitY <= tempImageData.height) {
                 Mat faceMatBGR = new Mat(trackingInfo.matBgr, trackingInfo.faceRect);
-                Imgproc.resize(faceMatBGR, faceMatBGR, new Size(tempImageData.height / 2, tempImageData.width / 2));
+                Imgproc.resize(faceMatBGR, faceMatBGR, new Size(tempImageData.height >> 1, tempImageData.width >> 1));
                 Mat faceMatBGRA = new Mat();
                 Imgproc.cvtColor(faceMatBGR, faceMatBGRA, Imgproc.COLOR_BGR2RGBA);
                 Bitmap faceBmp = Bitmap.createBitmap(faceMatBGR.width(), faceMatBGR.height(), Bitmap.Config.ARGB_8888);
                 Utils.matToBitmap(faceMatBGRA, faceBmp);
                 mView.drawFaceImage(faceBmp);
+                if (!faceBmp.isRecycled()) {
+                    faceBmp.recycle();
+                }
             }
             isDetecting = false;
             if (!isSearchingFace) {
@@ -179,7 +182,6 @@ public class PresenterImpl implements SeetaContract.Presenter {
     };
 
     private final Handler mFasHandler = new Handler(mFasThread.getLooper()) {
-
         @Override
         public void handleMessage(Message msg) {
             if (isNeedDestroy || isDetecting || isDestroyed || mView == null) {
@@ -191,7 +193,8 @@ public class PresenterImpl implements SeetaContract.Presenter {
             trackingInfo.matBgr.get(0, 0, tempImageData.data);
             SeetaRect faceInfo = trackingInfo.faceInfo;
 
-            if (faceInfo.width == 0 || interceptor != null && interceptor.onPrepare(faceInfo)) {
+            if (faceInfo.width == 0 || interceptor != null && !interceptor.onPrepare(faceInfo)) {
+                trackingInfo.release();
                 return;
             }
 
@@ -209,17 +212,19 @@ public class PresenterImpl implements SeetaContract.Presenter {
             }
 
             if (EnginHelper.registerName2feats.isEmpty() && interceptor == null) {
+                trackingInfo.release();
                 return;
             }
+
             isSearchingFace = true;
             FaceAntiSpoofing.Status faceAntiSpoofingState = null;
-            SeetaPointF[] points = new SeetaPointF[5];
             //特征点检测
             EnginHelper.getInstance().getFaceLandMarker().mark(tempImageData, faceInfo, points);
             FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
 
             int fSize = faceRecognizer.GetExtractFeatureSize();
             if (fSize == 0) {
+                trackingInfo.release();
                 isSearchingFace = false;
                 return;
             }
@@ -231,17 +236,19 @@ public class PresenterImpl implements SeetaContract.Presenter {
             }
 
             if (isNeedDestroy || isDestroyed) {
+                trackingInfo.release();
+                cancelSearchTaskOnce();
+                return;
+            }
+            //特征提取
+            faceRecognizer.Extract(tempImageData, points, feats);
+            if (isNeedDestroy || isDestroyed) {
+                trackingInfo.release();
                 cancelSearchTaskOnce();
                 return;
             }
 
-            //特征提取
-            faceRecognizer.Extract(tempImageData, points, feats);
             if (interceptor != null) {
-                if (isNeedDestroy || isDestroyed) {
-                    cancelSearchTaskOnce();
-                    return;
-                }
                 faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
                 if (interceptor.onExtractFeats(feats, faceAntiSpoofingState)) {
                     trackingInfo.release();
@@ -266,9 +273,9 @@ public class PresenterImpl implements SeetaContract.Presenter {
                     final Rect faceRect = trackingInfo.faceRect;
                     mView.onDetectFinish(target, trackingInfo.matBgr, faceRect);
                 }
-                trackingInfo.release();
             });
 
+            trackingInfo.release();
             cancelSearchTaskOnce();
         }
     };
@@ -363,6 +370,8 @@ public class PresenterImpl implements SeetaContract.Presenter {
         }
 
         if (isNeedDestroy || isDestroyed || mView == null || !mView.isActive()) {
+            trackingInfo.release();
+            destroy();
             return;
         }
 
@@ -410,7 +419,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
         mFasThread.quitSafely();
 
         if (tempImageData != null) {
-            tempImageData.data = null;
+            tempImageData.clear();
             tempImageData = null;
         }
 
@@ -418,6 +427,8 @@ public class PresenterImpl implements SeetaContract.Presenter {
             tempMatYUV.release();
             tempMatYUV = null;
         }
+        feats = null;
+        points = null;
         Log.d(TAG, "--------------destroy() over!--------------");
         return true;
     }

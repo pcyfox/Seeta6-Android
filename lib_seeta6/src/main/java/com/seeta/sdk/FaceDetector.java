@@ -13,7 +13,7 @@ public class FaceDetector {
     private native void construct(SeetaModelSetting setting) throws Exception;
 
     public FaceDetector(SeetaModelSetting setting) throws Exception {
-        this.construct(setting);
+        construct(setting);
     }
 
     public native void dispose();

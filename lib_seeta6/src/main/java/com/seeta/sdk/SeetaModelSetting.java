@@ -9,7 +9,7 @@ public class SeetaModelSetting {
         this.id = id;
         this.device = dev;
         this.model = new String[models.length];
-        System.arraycopy(models, 0, this.model, 0, models.length);
+        System.arraycopy(models, 0, model, 0, models.length);
     }
 
     public SeetaModelSetting(String[] models) {

@@ -59,6 +59,12 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
+
+    }
+
+    public void init() {
+        if (null != faceRectView) return;
+        faceRectView = new FaceRectView(getContext());
         cameraPreview = new CameraPreview(getContext());
         cameraPreview.setCameraCallbacks(new CameraCallbacks() {
             @Override
@@ -83,7 +89,8 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
             }
         });
         presenter.resume(this);
-        faceRectView = new FaceRectView(getContext());
+
+
         addView(cameraPreview, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         addView(faceRectView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
     }
@@ -195,6 +202,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
 
     public boolean release() {
         isStartDetected = false;
+        faceRectView = null;
         if (presenter.destroy()) {
             EnginHelper.getInstance().release();
             return true;

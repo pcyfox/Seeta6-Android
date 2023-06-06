@@ -29,6 +29,7 @@ public class TestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_activty);
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
+        faceRecognitionView.init();
         etRegister = findViewById(R.id.et_register_name);
         tvName = findViewById(R.id.tv_name);
         new Thread(() -> {

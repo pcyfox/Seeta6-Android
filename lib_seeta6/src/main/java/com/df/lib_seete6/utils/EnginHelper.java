@@ -73,11 +73,9 @@ public class EnginHelper {
         return enginConfig;
     }
 
-
     public boolean isInitOver() {
         return isInitOver;
     }
-
 
     public boolean initEngine(Context context, EnginConfig enginConfig) {
         Log.d(TAG, "initEngine() called with:  enginConfig = [" + enginConfig + "]");
@@ -86,7 +84,6 @@ public class EnginHelper {
         String faceModelPath;
         String fasModelPath;
         String modelRootDir = enginConfig.modelRootDir;
-
 
         if (TextUtils.isEmpty(modelRootDir)) {
             faceModelPath = getInternalCacheDirectory(context, "face").getAbsolutePath();

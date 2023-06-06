@@ -40,6 +40,8 @@ public class FaceDialog extends AppCompatDialog {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.dialog_face);
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
+        faceRecognitionView.init();
+
         assert faceRecognitionView != null;
 //        faceRecognitionView.setInterceptor(new ExtractFaceResultInterceptor() {
 //            @Override

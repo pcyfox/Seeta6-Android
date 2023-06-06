@@ -354,6 +354,7 @@ public class PresenterImpl implements SeetaContract.Presenter {
         }
 
         EnginConfig config = EnginHelper.getInstance().getEnginConfig();
+
         if (config.isNeedFlipUpToDown) {
             Core.flip(trackingInfo.matBgr, trackingInfo.matBgr, 0);
         }

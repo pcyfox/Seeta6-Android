@@ -50,6 +50,8 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     private float previewScaleX = 1.0f;
     private float previewScaleY = 1.0f;
     private volatile boolean isStartDetected = true;
+    private volatile boolean isInit = false;
+
     private FaceRecognitionListener faceRecognitionListener;
 
     {
@@ -59,11 +61,11 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-
+        init();
     }
 
     public void init() {
-        if (null != faceRectView) return;
+        if (isInit) return;
         faceRectView = new FaceRectView(getContext());
         cameraPreview = new CameraPreview(getContext());
         cameraPreview.setCameraCallbacks(new CameraCallbacks() {
@@ -89,20 +91,21 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
             }
         });
         presenter.resume(this);
-
-
         addView(cameraPreview, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         addView(faceRectView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        isInit = true;
     }
 
 
     @Override
     public void drawFaceRect(Rect faceRect) {
+        if (faceRectView == null) return;
         faceRectView.drawFaceRect(faceRect, previewScaleX, previewScaleY);
     }
 
     @Override
     public void drawFaceImage(Bitmap faceBmp) {
+        if (faceRectView == null) return;
         faceRectView.drawBitmap(faceBmp, 0, 0, null);
     }
 
@@ -202,6 +205,9 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
 
     public boolean release() {
         isStartDetected = false;
+        isInit = false;
+        pauseCamera();
+        pauseDetect();
         faceRectView = null;
         if (presenter.destroy()) {
             EnginHelper.getInstance().release();

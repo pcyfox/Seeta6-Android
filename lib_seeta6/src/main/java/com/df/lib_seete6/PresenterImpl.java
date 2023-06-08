@@ -2,7 +2,6 @@ package com.df.lib_seete6;
 
 
 import android.graphics.Bitmap;
-import android.nfc.Tag;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -55,7 +54,13 @@ public class PresenterImpl implements SeetaContract.Presenter {
     private volatile boolean isDestroyed = false;
     private volatile boolean isSearchingFace = false;
 
+    private int lastRotation;
     private ExtractFaceResultInterceptor interceptor;
+
+    private HandlerThread mFaceTrackThread;
+    private HandlerThread mFasThread;
+    private Handler mFaceTrackingHandler;
+    private Handler mFasHandler;
 
     public static class TrackingInfo {
         public Mat matBgr;
@@ -78,21 +83,183 @@ public class PresenterImpl implements SeetaContract.Presenter {
         }
     }
 
-    private HandlerThread mFaceTrackThread;
-    private HandlerThread mFasThread;
-
-    private int lastRotation;
-
     {
         init();
     }
-
 
     private void init() {
         mFaceTrackThread = new HandlerThread("FaceTrackThread", Process.THREAD_PRIORITY_MORE_FAVORABLE);
         mFasThread = new HandlerThread("FasThread", Process.THREAD_PRIORITY_MORE_FAVORABLE);
         mFaceTrackThread.start();
         mFasThread.start();
+        initHandler();
+    }
+
+    private void initHandler() {
+        mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                if (isNeedDestroy || isDestroyed || mView == null) {
+                    checkState();
+                    return;
+                }
+
+                isDetecting = true;
+                final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
+                trackingInfo.matBgr.get(0, 0, tempImageData.data);
+                SeetaRect[] faces = EnginHelper.getInstance().getFaceDetector().Detect(tempImageData);
+
+                if (faces.length == 0) {
+                    if (mView != null) {
+                        mView.drawFaceRect(null);
+                    }
+                    trackingInfo.release();
+                    isDetecting = false;
+                    return;
+                }
+
+                int maxIndex = 0;
+                double maxWidth = 0;
+                for (int i = 0; i < faces.length; ++i) {
+                    if (faces[i].width > maxWidth) {
+                        maxIndex = i;
+                        maxWidth = faces[i].width;
+                    }
+                }
+
+                trackingInfo.faceInfo = faces[maxIndex];
+                trackingInfo.faceRect.x = faces[maxIndex].x;
+                trackingInfo.faceRect.y = faces[maxIndex].y;
+                trackingInfo.faceRect.width = faces[maxIndex].width;
+                trackingInfo.faceRect.height = faces[maxIndex].height;
+                trackingInfo.lastProcessTime = System.currentTimeMillis();
+                //draw face rect
+                mView.drawFaceRect(trackingInfo.faceRect);
+
+                int limitX = trackingInfo.faceRect.x + trackingInfo.faceRect.width;
+                int limitY = trackingInfo.faceRect.y + trackingInfo.faceRect.height;
+
+                final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
+                if (enginConfig != null && enginConfig.isNeedFaceImage && limitX <= tempImageData.width && limitY <= tempImageData.height) {
+                    Mat faceMatBGR = new Mat(trackingInfo.matBgr, trackingInfo.faceRect);
+                    Imgproc.resize(faceMatBGR, faceMatBGR, new Size(tempImageData.height >> 1, tempImageData.width >> 1));
+                    Mat faceMatBGRA = new Mat();
+                    Imgproc.cvtColor(faceMatBGR, faceMatBGRA, Imgproc.COLOR_BGR2RGBA);
+                    Bitmap faceBmp = Bitmap.createBitmap(faceMatBGR.width(), faceMatBGR.height(), Bitmap.Config.ARGB_8888);
+                    Utils.matToBitmap(faceMatBGRA, faceBmp);
+                    mView.drawFaceImage(faceBmp);
+                    if (!faceBmp.isRecycled()) {
+                        faceBmp.recycle();
+                    }
+                }
+                isDetecting = false;
+                if (!isSearchingFace) {
+                    mFasHandler.removeMessages(0);
+                    mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
+                }
+                checkState();
+            }
+        };
+
+        mFasHandler = new Handler(mFasThread.getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                if (isNeedDestroy || isDetecting || isDestroyed || mView == null) {
+                    checkState();
+                    return;
+                }
+
+                final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
+                trackingInfo.matBgr.get(0, 0, tempImageData.data);
+                SeetaRect faceInfo = trackingInfo.faceInfo;
+
+                if (faceInfo.width == 0 || interceptor != null && !interceptor.onPrepare(faceInfo)) {
+                    trackingInfo.release();
+                    return;
+                }
+
+                //注册人脸
+                if (needFaceRegister) {
+                    if (EnginHelper.getInstance().startRegister(faceInfo, tempImageData, registeredName)) {
+                        final String tip = registeredName + ",注册成功";
+                        new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterByFrameFaceFinish(true, tip));
+                    } else {
+                        final String tip = registeredName + ",注册失败";
+                        new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterByFrameFaceFinish(false, tip));
+                    }
+                    needFaceRegister = false;
+                    registeredName = "";
+                }
+
+                if (EnginHelper.registerName2feats.isEmpty() && interceptor == null) {
+                    trackingInfo.release();
+                    return;
+                }
+
+                isSearchingFace = true;
+                FaceAntiSpoofing.Status faceAntiSpoofingState = null;
+                //特征点检测
+                EnginHelper.getInstance().getFaceLandMarker().mark(tempImageData, faceInfo, points);
+                FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
+
+                int fSize = faceRecognizer.GetExtractFeatureSize();
+                if (fSize == 0) {
+                    trackingInfo.release();
+                    isSearchingFace = false;
+                    return;
+                }
+
+                if (feats.length >= fSize) {
+                    Arrays.fill(feats, 0);
+                } else {
+                    feats = new float[fSize];
+                }
+
+                if (isNeedDestroy || isDestroyed) {
+                    trackingInfo.release();
+                    cancelSearchTaskOnce();
+                    return;
+                }
+                //特征提取
+                faceRecognizer.Extract(tempImageData, points, feats);
+                if (isNeedDestroy || isDestroyed) {
+                    trackingInfo.release();
+                    cancelSearchTaskOnce();
+                    return;
+                }
+
+                if (interceptor != null) {
+                    faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
+                    if (interceptor.onExtractFeats(feats, faceAntiSpoofingState)) {
+                        trackingInfo.release();
+                        cancelSearchTaskOnce();
+                        return;
+                    }
+                }
+
+                final Target target = findTarget(faceRecognizer, feats);
+                if (target == null) {
+                    cancelSearchTaskOnce();
+                    return;
+                }
+
+                if (faceAntiSpoofingState == null) {
+                    faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
+                }
+
+                target.setStatus(faceAntiSpoofingState);
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (mView != null) {
+                        final Rect faceRect = trackingInfo.faceRect;
+                        mView.onDetectFinish(target, trackingInfo.matBgr, faceRect);
+                    }
+                });
+
+                trackingInfo.release();
+                cancelSearchTaskOnce();
+            }
+        };
+
     }
 
     public PresenterImpl(SeetaContract.ViewInterface view) {
@@ -115,170 +282,6 @@ public class PresenterImpl implements SeetaContract.Presenter {
     public void setInterceptor(ExtractFaceResultInterceptor interceptor) {
         this.interceptor = interceptor;
     }
-
-    private final Handler mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-            if (isNeedDestroy || isDestroyed || mView == null) {
-                checkState();
-                return;
-            }
-
-            isDetecting = true;
-            final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
-            trackingInfo.matBgr.get(0, 0, tempImageData.data);
-            SeetaRect[] faces = EnginHelper.getInstance().getFaceDetector().Detect(tempImageData);
-
-            if (faces.length == 0) {
-                if (mView != null) {
-                    mView.drawFaceRect(null);
-                }
-                trackingInfo.release();
-                isDetecting = false;
-                return;
-            }
-
-            int maxIndex = 0;
-            double maxWidth = 0;
-            for (int i = 0; i < faces.length; ++i) {
-                if (faces[i].width > maxWidth) {
-                    maxIndex = i;
-                    maxWidth = faces[i].width;
-                }
-            }
-
-            trackingInfo.faceInfo = faces[maxIndex];
-            trackingInfo.faceRect.x = faces[maxIndex].x;
-            trackingInfo.faceRect.y = faces[maxIndex].y;
-            trackingInfo.faceRect.width = faces[maxIndex].width;
-            trackingInfo.faceRect.height = faces[maxIndex].height;
-            trackingInfo.lastProcessTime = System.currentTimeMillis();
-            //draw face rect
-            mView.drawFaceRect(trackingInfo.faceRect);
-
-            int limitX = trackingInfo.faceRect.x + trackingInfo.faceRect.width;
-            int limitY = trackingInfo.faceRect.y + trackingInfo.faceRect.height;
-
-            final EnginConfig enginConfig = EnginHelper.getInstance().getEnginConfig();
-            if (enginConfig != null && enginConfig.isNeedFaceImage && limitX <= tempImageData.width && limitY <= tempImageData.height) {
-                Mat faceMatBGR = new Mat(trackingInfo.matBgr, trackingInfo.faceRect);
-                Imgproc.resize(faceMatBGR, faceMatBGR, new Size(tempImageData.height >> 1, tempImageData.width >> 1));
-                Mat faceMatBGRA = new Mat();
-                Imgproc.cvtColor(faceMatBGR, faceMatBGRA, Imgproc.COLOR_BGR2RGBA);
-                Bitmap faceBmp = Bitmap.createBitmap(faceMatBGR.width(), faceMatBGR.height(), Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(faceMatBGRA, faceBmp);
-                mView.drawFaceImage(faceBmp);
-                if (!faceBmp.isRecycled()) {
-                    faceBmp.recycle();
-                }
-            }
-            isDetecting = false;
-            if (!isSearchingFace) {
-                mFasHandler.removeMessages(0);
-                mFasHandler.obtainMessage(0, trackingInfo).sendToTarget();
-            }
-            checkState();
-        }
-    };
-
-    private final Handler mFasHandler = new Handler(mFasThread.getLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-            if (isNeedDestroy || isDetecting || isDestroyed || mView == null) {
-                checkState();
-                return;
-            }
-
-            final TrackingInfo trackingInfo = (TrackingInfo) msg.obj;
-            trackingInfo.matBgr.get(0, 0, tempImageData.data);
-            SeetaRect faceInfo = trackingInfo.faceInfo;
-
-            if (faceInfo.width == 0 || interceptor != null && !interceptor.onPrepare(faceInfo)) {
-                trackingInfo.release();
-                return;
-            }
-
-            //注册人脸
-            if (needFaceRegister) {
-                if (EnginHelper.getInstance().startRegister(faceInfo, tempImageData, registeredName)) {
-                    final String tip = registeredName + ",注册成功";
-                    new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterByFrameFaceFinish(true, tip));
-                } else {
-                    final String tip = registeredName + ",注册失败";
-                    new Handler(Looper.getMainLooper()).post(() -> mView.onRegisterByFrameFaceFinish(false, tip));
-                }
-                needFaceRegister = false;
-                registeredName = "";
-            }
-
-            if (EnginHelper.registerName2feats.isEmpty() && interceptor == null) {
-                trackingInfo.release();
-                return;
-            }
-
-            isSearchingFace = true;
-            FaceAntiSpoofing.Status faceAntiSpoofingState = null;
-            //特征点检测
-            EnginHelper.getInstance().getFaceLandMarker().mark(tempImageData, faceInfo, points);
-            FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
-
-            int fSize = faceRecognizer.GetExtractFeatureSize();
-            if (fSize == 0) {
-                trackingInfo.release();
-                isSearchingFace = false;
-                return;
-            }
-
-            if (feats.length >= fSize) {
-                Arrays.fill(feats, 0);
-            } else {
-                feats = new float[fSize];
-            }
-
-            if (isNeedDestroy || isDestroyed) {
-                trackingInfo.release();
-                cancelSearchTaskOnce();
-                return;
-            }
-            //特征提取
-            faceRecognizer.Extract(tempImageData, points, feats);
-            if (isNeedDestroy || isDestroyed) {
-                trackingInfo.release();
-                cancelSearchTaskOnce();
-                return;
-            }
-
-            if (interceptor != null) {
-                faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
-                if (interceptor.onExtractFeats(feats, faceAntiSpoofingState)) {
-                    trackingInfo.release();
-                    cancelSearchTaskOnce();
-                    return;
-                }
-            }
-
-            final Target target = findTarget(faceRecognizer, feats);
-            if (target == null) {
-                cancelSearchTaskOnce();
-                return;
-            }
-
-            if (faceAntiSpoofingState == null) {
-                faceAntiSpoofingState = checkSpoofing(tempImageData, faceInfo, points);
-            }
-
-            target.setStatus(faceAntiSpoofingState);
-            new Handler(Looper.getMainLooper()).post(() -> {
-                if (mView != null) {
-                    final Rect faceRect = trackingInfo.faceRect;
-                    mView.onDetectFinish(target, trackingInfo.matBgr, faceRect);
-                }
-            });
-
-            trackingInfo.release();
-            cancelSearchTaskOnce();
-        }
-    };
 
     private void cancelSearchTaskOnce() {
         isSearchingFace = false;

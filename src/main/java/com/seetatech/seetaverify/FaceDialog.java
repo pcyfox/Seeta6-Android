@@ -9,12 +9,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDialog;
 
-import com.df.lib_seete6.ExtractFaceResultInterceptor;
 import com.df.lib_seete6.Target;
 import com.df.lib_seete6.view.FaceRecognitionListener;
 import com.df.lib_seete6.view.FaceRecognitionView;
-import com.seeta.sdk.FaceAntiSpoofing;
-import com.seeta.sdk.SeetaRect;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -40,8 +37,6 @@ public class FaceDialog extends AppCompatDialog {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.dialog_face);
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
-        faceRecognitionView.init();
-
         assert faceRecognitionView != null;
 //        faceRecognitionView.setInterceptor(new ExtractFaceResultInterceptor() {
 //            @Override
@@ -92,18 +87,16 @@ public class FaceDialog extends AppCompatDialog {
     @Override
     protected void onStart() {
         super.onStart();
+        faceRecognitionView.init();
         new Thread(() -> {
             boolean initRet = faceRecognitionView.initEngin();
             Log.d(TAG, "onStart() initRet=" + initRet);
         }).start();
-
         faceRecognitionView.resumeCamera(0, 0);
     }
 
     @Override
     public void dismiss() {
-        faceRecognitionView.pauseCamera();
-
         faceRecognitionView.postDelayed(() -> {
             boolean ret = faceRecognitionView.release();
             Log.d(TAG, "dismiss() release ret=" + ret);

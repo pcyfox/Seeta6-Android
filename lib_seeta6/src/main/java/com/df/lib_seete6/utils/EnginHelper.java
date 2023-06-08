@@ -50,6 +50,9 @@ public class EnginHelper {
     @Volatile
     private boolean isInitOver = false;
 
+    @Volatile
+    private boolean isRegistering = false;
+
     private EnginHelper() {
     }
 
@@ -206,17 +209,28 @@ public class EnginHelper {
         if (!isInitOver) {
             return false;
         }
+        isRegistering = true;
         SeetaImageData imageData = SeetaUtils.convertToSeetaImageData(faceBitmap);
         SeetaRect[] rectArray = EnginHelper.getInstance().getFaceDetector().Detect(imageData);
         if (rectArray == null || rectArray.length != 1) {
+            isRegistering = false;
+            return false;
+        }
+        if (!isInitOver) {
+            faceBitmap.recycle();
+            isRegistering = false;
             return false;
         }
         boolean ret = startRegister(rectArray[0], imageData, key);
         faceBitmap.recycle();
+        isRegistering = false;
         return ret;
     }
 
     public boolean startRegister(SeetaRect faceInfo, SeetaImageData imageData, String registeredName) {
+        if (!isInitOver) {
+            return false;
+        }
         if ("".equals(registeredName)) {
             return false;
         }
@@ -230,17 +244,39 @@ public class EnginHelper {
         }
         //特征点检测
         SeetaPointF[] points = new SeetaPointF[5];
+        if (!isInitOver) {
+            return false;
+        }
         EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
+        if (!isInitOver) {
+            return false;
+        }
         //特征提取
         faceRecognizer.Extract(imageData, points, feats);
+        if (!isInitOver) {
+            return false;
+        }
         //进行人脸的注册
         EnginHelper.registerName2feats.put(registeredName, feats);
         return true;
     }
 
+    public void clearRegisterFace(String key) {
+        EnginHelper.registerName2feats.remove(key);
+    }
 
-    public void release() {
+    public void clearRegisterFace() {
+        EnginHelper.registerName2feats.clear();
+    }
+
+    public boolean release() {
+        if (isRegistering) {
+            Log.e(TAG, "release() called fail,isRegistering=true");
+            return false;
+        }
+
         isInitOver = false;
+        clearRegisterFace();
         if (faceDetector != null) {
             faceDetector.dispose();
             faceDetector = null;
@@ -260,5 +296,7 @@ public class EnginHelper {
             faceAntiSpoofing.dispose();
             faceAntiSpoofing = null;
         }
+        Log.d(TAG, "release() called finish");
+        return true;
     }
 }

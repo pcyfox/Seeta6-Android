@@ -41,7 +41,7 @@ public class EnginHelper {
         return instance;
     }
 
-    public static Map<String, float[]> registerName2feats = new HashMap<>();
+    public static final Map<String, float[]> registerName2feats = new HashMap<>();
 
     private FaceDetector faceDetector = null;
     private FaceLandmarker faceLandMarker = null;
@@ -228,36 +228,39 @@ public class EnginHelper {
     }
 
     public boolean startRegister(SeetaRect faceInfo, SeetaImageData imageData, String registeredName) {
-        if (!isInitOver) {
-            return false;
+        synchronized (registerName2feats) {
+            Log.d(TAG, "startRegister() called with: faceInfo = [" + faceInfo + "], imageData = [" + imageData + "], registeredName = [" + registeredName + "]");
+            if (!isInitOver) {
+                return false;
+            }
+            if ("".equals(registeredName)) {
+                return false;
+            }
+            if (EnginHelper.isRegistered(registeredName)) {
+                EnginHelper.registerName2feats.remove(registeredName);
+            }
+            FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
+            float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
+            if (faceInfo.width == 0) {
+                return false;
+            }
+            //特征点检测
+            SeetaPointF[] points = new SeetaPointF[5];
+            if (!isInitOver) {
+                return false;
+            }
+            EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
+            if (!isInitOver) {
+                return false;
+            }
+            //特征提取
+            faceRecognizer.Extract(imageData, points, feats);
+            if (!isInitOver) {
+                return false;
+            }
+            //进行人脸的注册
+            EnginHelper.registerName2feats.put(registeredName, feats);
         }
-        if ("".equals(registeredName)) {
-            return false;
-        }
-        if (EnginHelper.isRegistered(registeredName)) {
-            EnginHelper.registerName2feats.remove(registeredName);
-        }
-        FaceRecognizer faceRecognizer = EnginHelper.getInstance().getFaceRecognizer();
-        float[] feats = new float[faceRecognizer.GetExtractFeatureSize()];
-        if (faceInfo.width == 0) {
-            return false;
-        }
-        //特征点检测
-        SeetaPointF[] points = new SeetaPointF[5];
-        if (!isInitOver) {
-            return false;
-        }
-        EnginHelper.getInstance().getFaceLandMarker().mark(imageData, faceInfo, points);
-        if (!isInitOver) {
-            return false;
-        }
-        //特征提取
-        faceRecognizer.Extract(imageData, points, feats);
-        if (!isInitOver) {
-            return false;
-        }
-        //进行人脸的注册
-        EnginHelper.registerName2feats.put(registeredName, feats);
         return true;
     }
 
@@ -270,33 +273,34 @@ public class EnginHelper {
     }
 
     public boolean release() {
-        if (isRegistering) {
-            Log.e(TAG, "release() called fail,isRegistering=true");
-            return false;
-        }
+        synchronized (registerName2feats) {
+            if (isRegistering) {
+                Log.e(TAG, "release() called fail,isRegistering=true");
+                return false;
+            }
+            isInitOver = false;
+            clearRegisterFace();
+            if (faceDetector != null) {
+                faceDetector.dispose();
+                faceDetector = null;
+            }
 
-        isInitOver = false;
-        clearRegisterFace();
-        if (faceDetector != null) {
-            faceDetector.dispose();
-            faceDetector = null;
-        }
+            if (faceRecognizer != null) {
+                faceRecognizer.dispose();
+                faceRecognizer = null;
+            }
 
-        if (faceRecognizer != null) {
-            faceRecognizer.dispose();
-            faceRecognizer = null;
-        }
+            if (faceLandMarker != null) {
+                faceLandMarker.dispose();
+                faceLandMarker = null;
+            }
 
-        if (faceLandMarker != null) {
-            faceLandMarker.dispose();
-            faceLandMarker = null;
+            if (faceAntiSpoofing != null) {
+                faceAntiSpoofing.dispose();
+                faceAntiSpoofing = null;
+            }
+            Log.d(TAG, "release() called finish");
         }
-
-        if (faceAntiSpoofing != null) {
-            faceAntiSpoofing.dispose();
-            faceAntiSpoofing = null;
-        }
-        Log.d(TAG, "release() called finish");
         return true;
     }
 }

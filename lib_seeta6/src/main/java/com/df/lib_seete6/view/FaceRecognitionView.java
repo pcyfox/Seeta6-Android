@@ -210,8 +210,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         pauseDetect();
         faceRectView = null;
         if (presenter.destroy()) {
-            EnginHelper.getInstance().release();
-            return true;
+            return EnginHelper.getInstance().release();
         }
         return false;
     }

@@ -1,21 +1,11 @@
 package com.seetatech.seetaverify;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.df.lib_seete6.Target;
-import com.df.lib_seete6.view.FaceRecognitionListener;
-import com.df.lib_seete6.view.FaceRecognitionView;
-
-import org.opencv.core.Mat;
-import org.opencv.core.Rect;
-
-import java.io.File;
+import com.df.lib_seete6.utils.EnginHelper;
 
 public class TestDialogActivity extends AppCompatActivity {
 
@@ -26,6 +16,13 @@ public class TestDialogActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_dialog);
         dialog = new FaceDialog(this);
+        dialog.setOnDismissListener(log -> {
+//            if (EnginHelper.getInstance().isInitOver()) {
+//                getWindow().getDecorView().postDelayed(() -> {
+//                    dialog.getFaceRecognitionView().release();
+//                }, 1800);
+//            }
+        });
     }
 
     @Override

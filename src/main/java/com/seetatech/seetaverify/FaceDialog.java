@@ -20,6 +20,10 @@ public class FaceDialog extends AppCompatDialog {
     private static final String TAG = "FaceDialog";
     private FaceRecognitionView faceRecognitionView;
 
+    public FaceRecognitionView getFaceRecognitionView() {
+        return faceRecognitionView;
+    }
+
     public FaceDialog(@NonNull Context context) {
         super(context);
     }
@@ -57,6 +61,21 @@ public class FaceDialog extends AppCompatDialog {
 //        });
 
 
+        Button btnRegisterFace = findViewById(R.id.btnRegister);
+        btnRegisterFace.setOnClickListener(v -> {
+            faceRecognitionView.registerByFrame("SPTLT");
+        });
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        faceRecognitionView.init();
+        new Thread(() -> {
+            boolean initRet = faceRecognitionView.initEngin();
+            Log.d(TAG, "onStart() initRet=" + initRet);
+        }).start();
         faceRecognitionView.setFaceRecognitionListener(new FaceRecognitionListener() {
             @Override
             public void onDetectFinish(Target target, Mat matBgr, Rect faceRect) {
@@ -77,21 +96,6 @@ public class FaceDialog extends AppCompatDialog {
             }
         });
 
-        Button btnRegisterFace = findViewById(R.id.btnRegister);
-        btnRegisterFace.setOnClickListener(v -> {
-            faceRecognitionView.registerByFrame("SPTLT");
-        });
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        faceRecognitionView.init();
-        new Thread(() -> {
-            boolean initRet = faceRecognitionView.initEngin();
-            Log.d(TAG, "onStart() initRet=" + initRet);
-        }).start();
         faceRecognitionView.resumeCamera(0, 0);
     }
 

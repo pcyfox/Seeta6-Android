@@ -7,6 +7,7 @@
     tools:context=".TestActivity">
 
     <Button
+        android:text="RegisterFace"
         android:id="@+id/btnRegister"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

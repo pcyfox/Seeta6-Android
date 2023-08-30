@@ -175,7 +175,7 @@ public class EnginHelper {
                 faceAntiSpoofing.SetThreshold(enginConfig.fasClarity, enginConfig.fasThresh);
             }
             isInitOver = true;
-            Log.e(TAG, "-----------init over--------------");
+            Log.i(TAG, "-----------init over--------------");
         } catch (Exception e) {
             Log.e(TAG, "init exception:" + e);
         }

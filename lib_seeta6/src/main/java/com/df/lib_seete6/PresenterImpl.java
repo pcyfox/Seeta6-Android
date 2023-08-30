@@ -107,6 +107,11 @@ public class PresenterImpl implements SeetaContract.Presenter {
         mFaceTrackingHandler = new Handler(mFaceTrackThread.getLooper()) {
             @Override
             public void handleMessage(Message msg) {
+                if (EnginHelper.getInstance().isRegistering()) {
+                    Log.e(TAG, "detect() called fail,engin is  isRegistering!");
+                    return;
+                }
+
                 if (isDestroy()) {
                     checkState();
                     return;
@@ -171,6 +176,11 @@ public class PresenterImpl implements SeetaContract.Presenter {
         mFasHandler = new Handler(mFasThread.getLooper()) {
             @Override
             public void handleMessage(Message msg) {
+                if (EnginHelper.getInstance().isRegistering()) {
+                    Log.e(TAG, "detect() called fail,engin is  isRegistering!");
+                    return;
+                }
+
                 if (isDestroy() || isDetecting) {
                     checkState();
                     return;
@@ -365,13 +375,13 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
-        if (EnginHelper.getInstance().isRegistering()) {
-            Log.e(TAG, "detect() called fail,engin is  isRegistering!");
+        if (!EnginHelper.getInstance().isInitOver()) {
+            Log.e(TAG, "detect() called fail,engin is  not init!");
             return;
         }
 
-        if (!EnginHelper.getInstance().isInitOver()) {
-            Log.e(TAG, "detect() called fail,engin is  not init!");
+        if (EnginHelper.getInstance().isRegistering()) {
+            Log.e(TAG, "detect() called fail,engin is  isRegistering!");
             return;
         }
 

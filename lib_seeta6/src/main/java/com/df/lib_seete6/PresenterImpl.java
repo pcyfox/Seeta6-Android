@@ -365,6 +365,11 @@ public class PresenterImpl implements SeetaContract.Presenter {
 
     @Override
     public void detect(byte[] data, int width, int height, int rotation) {
+        if (!EnginHelper.getInstance().isRegistering()) {
+            Log.d(TAG, "detect() called fail,engin is  isRegistering!");
+            return;
+        }
+
         if (!EnginHelper.getInstance().isInitOver()) {
             Log.d(TAG, "detect() called fail,engin is  not init!");
             return;

@@ -1,7 +1,5 @@
 package com.seeta.sdk;
 
-import android.util.Log;
-
 import com.df.lib_seete6.utils.EnginHelper;
 
 public class FaceRecognizer {
@@ -28,10 +26,8 @@ public class FaceRecognizer {
 
 
     public boolean extract(SeetaImageData image, SeetaPointF[] points, float[] features) {
-        Log.d(TAG, "extract() called  --------------1----------");
         if (image == null || points == null || features == null) return false;
         if (!EnginHelper.getInstance().isInitOver()) return false;
-        Log.d(TAG, "extract() called  --------------2----------");
         return Extract(image, points, features);
     }
 

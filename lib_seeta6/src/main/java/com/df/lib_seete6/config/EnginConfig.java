@@ -10,7 +10,7 @@ public class EnginConfig {
 
     public String modelRootDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/Seeta6";
 
-    public int minFaceSize = 80;
+    public int minFaceSize = 100;
     public float faceThresh = 0.70f;
 
     public float fasClarity = 0.30f;

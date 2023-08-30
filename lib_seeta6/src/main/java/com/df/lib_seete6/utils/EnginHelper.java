@@ -76,6 +76,10 @@ public class EnginHelper {
         return enginConfig;
     }
 
+    public boolean isRegistering() {
+        return isRegistering;
+    }
+
     public boolean isInitOver() {
         return isInitOver;
     }

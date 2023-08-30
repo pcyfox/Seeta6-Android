@@ -49,7 +49,8 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     private Camera.Size previewSize;
     private float previewScaleX = 1.0f;
     private float previewScaleY = 1.0f;
-    private volatile boolean isStartDetected = true;
+
+    private volatile boolean isStartDetected = false;
     private volatile boolean isInit = false;
 
     private FaceRecognitionListener faceRecognitionListener;

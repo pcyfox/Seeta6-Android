@@ -91,14 +91,15 @@ public class TestActivity extends AppCompatActivity {
     public void onBtnRegisterFromLocalClick(View v) {
         faceRecognitionView.pauseDetect();
         v.postDelayed(() -> new Thread(() -> {
-            boolean ret = faceRecognitionView.registerFace("李二狗", new File("/sdcard/李二狗.png"));
+            boolean ret = faceRecognitionView.registerFace("李二狗", new File("/sdcard/test.png"));
             Log.d(TAG, "onBtnRegisterFromLocalClick() called with: ret = [" + ret + "]");
-            faceRecognitionView.resumeDetect();
+            if (ret)
+                faceRecognitionView.resumeDetect();
         }).start(), 300);
     }
 
     public void onTakePicClick(View v) {
-        faceRecognitionView.takePicture("/sdcard/", "李二狗.png");
+        faceRecognitionView.takePicture("/sdcard/", "test.png");
     }
 
     public void onFinishClick(View c) {

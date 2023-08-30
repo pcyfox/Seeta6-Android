@@ -49,6 +49,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     private Camera.Size previewSize;
     private float previewScaleX = 1.0f;
     private float previewScaleY = 1.0f;
+    private long detectCount = 0L;
 
     private volatile boolean isStartDetected = false;
     private volatile boolean isInit = false;
@@ -74,6 +75,10 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
             @Override
             public void onPreviewFrame(byte[] data, Camera camera) {
                 synchronized (lock) {
+                    if (detectCount++ <= 3) {
+                        Log.d(TAG, "onPreviewFrame() called call in first isStartDetected= [" + isStartDetected + "],detectCount=" + detectCount);
+                    }
+
                     if (!isStartDetected) {
                         return;
                     }
@@ -235,7 +240,6 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
      * @param cameraId :Camera.CameraInfo.CAMERA_FACING_FRONT,Camera.CameraInfo.CAMERA_FACING_BACK,
      */
     public void resumeCamera(int rotation, int cameraId) {
-        resumeDetect();
         cameraPreview.onResume(rotation, cameraId);
     }
 

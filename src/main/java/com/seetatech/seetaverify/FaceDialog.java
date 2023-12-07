@@ -84,12 +84,6 @@ public class FaceDialog extends AppCompatDialog {
             }
 
             @Override
-            public void onRegisterByFrameFaceFinish(boolean isSuccess, String tip) {
-                Log.d(TAG, "onRegisterByFrameFaceFinish() called with: isSuccess = [" + isSuccess + "], tip = [" + tip + "]");
-
-            }
-
-            @Override
             public void onTakePictureFinish(String path, String name) {
                 Log.d(TAG, "onTakePictureFinish() called with: path = [" + path + "], name = [" + name + "]");
 

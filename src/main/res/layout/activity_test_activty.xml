@@ -41,6 +41,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="12dp"
+            android:text="李二狗"
             android:textColor="@android:color/white" />
 
         <Button

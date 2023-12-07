@@ -57,6 +57,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     private final Object lock = new Object();
 
     private FaceRecognitionListener faceRecognitionListener;
+    private FaceRegisterListener faceRegisterListener;
 
     {
         presenter = new PresenterImpl(this);
@@ -64,6 +65,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
 
     public void init() {
         if (isInit) return;
+        presenter.setFaceRegisterListener(faceRegisterListener);
         faceRectView = new FaceRectView(getContext());
         cameraPreview = new CameraPreview(getContext());
         cameraPreview.setCameraCallbacks(new CameraCallbacks() {
@@ -137,12 +139,6 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         }
     }
 
-    @Override
-    public void onRegisterByFrameFaceFinish(boolean isSuccess, String tip) {
-        if (faceRecognitionListener != null) {
-            faceRecognitionListener.onRegisterByFrameFaceFinish(isSuccess, tip);
-        }
-    }
 
     @Override
     public void onTakePictureFinish(String path, String name) {
@@ -168,6 +164,11 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         return faceRectView;
     }
 
+    public void setFaceRegisterListener(FaceRegisterListener faceRegisterListener) {
+        this.faceRegisterListener = faceRegisterListener;
+        presenter.setFaceRegisterListener(faceRegisterListener);
+    }
+
     public void setFaceRecognitionListener(FaceRecognitionListener faceRecognitionListener) {
         this.faceRecognitionListener = faceRecognitionListener;
     }
@@ -177,7 +178,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     }
 
     public void registerByFrame(String key) {
-        presenter.startRegisterFrame(true, key);
+        presenter.startRegisterFrame(key);
     }
 
     public boolean registerFace(String key, File faceFile) {

@@ -27,7 +27,6 @@ import com.df.lib_seete6.Target;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview2;
 import com.df.lib_seete6.view.FaceRectView;
-import com.seeta.sdk.FaceAntiSpoofing;
 import com.seetatech.seetaverify.R;
 
 import org.opencv.core.Mat;
@@ -77,6 +76,14 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate");
         mPresenter = new PresenterImpl(this);
+        mPresenter.setFaceRegisterListener(((isSuccess, key) -> {
+            //提示注册成功
+            Toast.makeText(getContext(), key + ",isSuccess:" + isSuccess, Toast.LENGTH_LONG).show();
+            //还原EditView
+            edit_name.setText("");
+            edit_name.setHint("enter name");
+        }));
+
     }
 
     @Nullable
@@ -102,7 +109,7 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
         btn_register.setOnClickListener(view12 -> {
             //人脸注册
             String registeredName = edit_name.getText().toString();
-            mPresenter.startRegisterFrame(true, registeredName);
+            mPresenter.startRegisterFrame(registeredName);
         });
         edit_name.setOnClickListener(view1 -> edit_name.setFocusable(true));
         btn_take_pic.setOnClickListener(v -> mPresenter.takePicture("/sdcard/", "detect.jpg"));
@@ -173,15 +180,6 @@ public class MainFragment extends Fragment implements SeetaContract.ViewInterfac
                 break;
         }
         txtTips.setText(target.getKey());
-    }
-
-    @Override
-    public void onRegisterByFrameFaceFinish(boolean isSuccess, String tip) {
-        //提示注册成功
-        Toast.makeText(getContext(), tip, Toast.LENGTH_LONG).show();
-        //还原EditView
-        edit_name.setText("");
-        edit_name.setHint("enter name");
     }
 
 

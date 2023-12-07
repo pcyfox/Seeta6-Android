@@ -1,17 +1,19 @@
 package com.seetatech.seetaverify;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.df.lib_seete6.BuildConfig;
 import com.df.lib_seete6.Target;
 import com.df.lib_seete6.view.FaceRecognitionListener;
 import com.df.lib_seete6.view.FaceRecognitionView;
-import com.seeta.sdk.FaceAntiSpoofing;
+import com.df.lib_seete6.view.FaceRegisterListener;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -31,18 +33,19 @@ public class TestActivity extends AppCompatActivity {
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
         etRegister = findViewById(R.id.et_register_name);
         tvName = findViewById(R.id.tv_name);
+        faceRecognitionView.setFaceRegisterListener((isSuccess, key) -> {
+            Log.d(TAG, "onRegisterFinish, isSuccess = " + isSuccess + ",key = " + key);
+        });
 
         faceRecognitionView.setFaceRecognitionListener(new FaceRecognitionListener() {
 
             @Override
             public void onDetectFinish(Target target, Mat matBgr, Rect faceRect) {
+                if (BuildConfig.DEBUG)
+                    Log.d(TAG, "onDetectFinish() called with: target = [" + target + "], matBgr = [" + matBgr + "], faceRect = [" + faceRect + "]");
                 tvName.setText("key:" + target.getKey() + "\nsimilarity:" + target.getSimilarity() + "\nstatus;" + target.getStatus());
             }
 
-            @Override
-            public void onRegisterByFrameFaceFinish(boolean isSuccess, String tip) {
-                Log.d(TAG, "onRegisterByFrameFaceFinish() called with: isSuccess = [" + isSuccess + "], tip = [" + tip + "]");
-            }
 
             @Override
             public void onTakePictureFinish(String path, String name) {
@@ -83,8 +86,10 @@ public class TestActivity extends AppCompatActivity {
     public void onBtnRegisterClick(View c) {
         String key = etRegister.getText().toString();
         if (key.isEmpty()) {
+            Toast.makeText(this, "请输入Key", Toast.LENGTH_SHORT).show();
             return;
         }
+        faceRecognitionView.resumeDetect();
         faceRecognitionView.registerByFrame(key);
     }
 
@@ -93,8 +98,7 @@ public class TestActivity extends AppCompatActivity {
         v.postDelayed(() -> new Thread(() -> {
             boolean ret = faceRecognitionView.registerFace("李二狗", new File("/sdcard/test.png"));
             Log.d(TAG, "onBtnRegisterFromLocalClick() called with: ret = [" + ret + "]");
-            if (ret)
-                faceRecognitionView.resumeDetect();
+            if (ret) faceRecognitionView.resumeDetect();
         }).start(), 300);
     }
 

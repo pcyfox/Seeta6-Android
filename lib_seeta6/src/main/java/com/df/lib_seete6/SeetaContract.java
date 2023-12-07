@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import androidx.annotation.Keep;
 
 import com.df.lib_seete6.view.FaceRecognitionListener;
+import com.df.lib_seete6.view.FaceRegisterListener;
 
 import org.opencv.core.Rect;
 
@@ -25,9 +26,11 @@ public interface SeetaContract {
 
     interface Presenter {
 
+        void setFaceRegisterListener(FaceRegisterListener faceRegisterListener);
+
         void takePicture(String path, String name);
 
-        void startRegisterFrame(boolean needFaceRegister, String registeredName);
+        void startRegisterFrame( String key);
 
         void detect(byte[] data, int width, int height, int rotation);
 

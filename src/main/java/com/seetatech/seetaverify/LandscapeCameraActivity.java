@@ -109,10 +109,6 @@ public class LandscapeCameraActivity extends AppCompatActivity implements SeetaC
 
     }
 
-    @Override
-    public void onRegisterByFrameFaceFinish(boolean isSuccess, String tip) {
-
-    }
 
     @Override
     public boolean isActive() {

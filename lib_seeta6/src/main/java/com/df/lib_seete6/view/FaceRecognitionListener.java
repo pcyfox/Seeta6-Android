@@ -10,7 +10,6 @@ public interface FaceRecognitionListener {
 
     void onDetectFinish(Target target, Mat matBgr, Rect faceRect);
 
-    void onRegisterByFrameFaceFinish(boolean isSuccess, String tip);
 
     void onTakePictureFinish(String path, String name);
 }

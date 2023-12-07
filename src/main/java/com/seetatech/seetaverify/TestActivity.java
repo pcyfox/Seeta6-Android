@@ -76,10 +76,17 @@ public class TestActivity extends AppCompatActivity {
         super.onDestroy();
         boolean release = faceRecognitionView.release();
         Log.w(TAG, "---------------onDestroy() called release 1 ret=" + release);
-        if (!release) {
-            release = faceRecognitionView.release();
+        if(!release){
+            new Thread(() -> {
+                try {
+                    Thread.sleep(8000);
+                    boolean release2 = faceRecognitionView.release();
+                    Log.w(TAG, "---------------onDestroy() called release 2 ret=" + release2);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
         }
-        Log.w(TAG, "---------------onDestroy() called release 2 ret=" + release);
     }
 
 

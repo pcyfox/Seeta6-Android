@@ -80,7 +80,6 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
                     if (detectCount++ <= 3) {
                         Log.d(TAG, "onPreviewFrame() called call in first isStartDetected= [" + isStartDetected + "],detectCount=" + detectCount);
                     }
-
                     if (!isStartDetected) {
                         return;
                     }
@@ -129,7 +128,6 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     @Override
     public void onOpenCameraError(int code, String message) {
         Log.d(TAG, "onOpenCameraError() called with: code = [" + code + "], message = [" + message + "]");
-
     }
 
     @Override

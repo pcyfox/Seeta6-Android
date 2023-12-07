@@ -1,6 +1,6 @@
 "# SeetaFace6-Android"
 
-人脸识别+活体检测
+人脸识别+人脸对比+活体检测
 
 tep 1. Add the JitPack repository to your build file
 
@@ -14,5 +14,5 @@ tep 1. Add the JitPack repository to your build file
 Step 2. Add the dependency
 
 	dependencies {
-	        implementation 'com.github.pcyfox:Seeta6-Android:Tag'
+	        implementation 'com.github.pcyfox:Seeta6-Android:V1.0.25'
 	}

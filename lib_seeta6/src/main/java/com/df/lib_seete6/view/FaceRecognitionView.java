@@ -196,19 +196,19 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     }
 
     public void resumeDetect() {
+        Log.d(TAG, "resumeDetect() called");
         synchronized (lock) {
             if (presenter != null) {
                 presenter.resume(this);
             }
-            Log.d(TAG, "resumeDetect() called");
             isStartDetected = true;
         }
     }
 
     public void pauseDetect() {
+        Log.d(TAG, "pauseDetect() called");
         synchronized (lock) {
             isStartDetected = false;
-            Log.d(TAG, "pauseDetect() called");
         }
     }
 
@@ -219,7 +219,9 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     }
 
     public boolean isStartDetected() {
-        return isStartDetected;
+        synchronized (lock) {
+            return isStartDetected;
+        }
     }
 
 

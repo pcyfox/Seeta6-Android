@@ -68,6 +68,24 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     };
     private int cameraRotation = 0;
 
+
+    private int findCameraId() throws CameraUnavailableException {
+        int numberOfCameras = Camera.getNumberOfCameras();
+        if (numberOfCameras <= 0) {
+            Log.d(TAG, "openCamera() called failed,not found camera!");
+            throw new CameraUnavailableException();
+        }
+
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        for (int i = 0; i < numberOfCameras; i++) {
+            Camera.getCameraInfo(i, cameraInfo);
+            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                return i;
+            }
+        }
+        return Camera.CameraInfo.CAMERA_FACING_BACK;
+    }
+
     public CameraPreview(Context context) {
         this(context, null);
     }
@@ -150,12 +168,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             int wTotal = wantPreViewSize.getHeight() * wantPreViewSize.getWidth();
             int total = size.width * size.height;
             tempSize.put(Math.abs(wTotal - total), size);
-
         }
         ArrayList<Integer> dSizeList = new ArrayList<>(tempSize.keySet());
         Collections.sort(dSizeList);
-        Camera.Size expected = tempSize.get(dSizeList.get(0));
-        return expected;
+        return tempSize.get(dSizeList.get(0));
     }
 
     private void startPreview(SurfaceHolder holder) {
@@ -210,16 +226,20 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         return -1;
     }
 
+    public static Camera open() {
+        return null;
+    }
+
     private void openCamera() throws CameraUnavailableException {
-        if (Camera.getNumberOfCameras() > 0) {
-            try {
-                mCamera = Camera.open(cameraId);
-                assert mCamera != null;
-            } catch (Exception e) {
-                throw new CameraUnavailableException(e);
-            }
-        } else {
-            throw new CameraUnavailableException();
+        cameraId = findCameraId();
+        int numberOfCameras = Camera.getNumberOfCameras();
+        Log.d(TAG, "openCamera() called,cameraId =" + cameraId + ",numberOfCameras=" + numberOfCameras);
+        try {
+            mCamera = Camera.open(cameraId);
+            assert mCamera != null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CameraUnavailableException(e);
         }
     }
 

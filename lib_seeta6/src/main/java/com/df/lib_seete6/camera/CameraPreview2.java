@@ -9,14 +9,13 @@ import android.view.TextureView;
 
 import androidx.annotation.Nullable;
 
-
 import com.df.lib_seete6.constants.ErrorCode;
 
 import java.util.List;
 
 public class CameraPreview2 extends TextureView implements TextureView.SurfaceTextureListener {
-
-    private static final int CAMERA_ID = 1;
+    private Camera.CameraInfo cameraInfo;
+    private static int cameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
 
     private static final String TAG = "CameraPreview";
     @Nullable
@@ -25,6 +24,7 @@ public class CameraPreview2 extends TextureView implements TextureView.SurfaceTe
     private Camera.CameraInfo mCameraInfo;
     private CameraCallbacks mCallbacks;
     private int mRotation;
+
 
     public CameraPreview2(Context context) {
         this(context, null);
@@ -51,22 +51,9 @@ public class CameraPreview2 extends TextureView implements TextureView.SurfaceTe
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         try {
             openCamera();
-            Camera.CameraInfo info = new Camera.CameraInfo();
-            Camera.getCameraInfo(CAMERA_ID, info);
-//            int rotation = Surface.ROTATION_0;
-//            if (getContext() instanceof Activity) {
-//                rotation = ((Activity) getContext())
-//                        .getWindowManager().getDefaultDisplay().getRotation();
-//            }
-//
-//            if (this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
-//                rotation = info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT ? 360 - info.orientation : info.orientation;
-//                Log.d(TAG, "orientation: portrait rotation="+rotation);
-//            } else {
-//                rotation = 90;
-//                Log.d(TAG, "orientation: landscape");
-//            }
-            setCamera(mCamera, info, 90);
+            cameraInfo = new Camera.CameraInfo();
+            Camera.getCameraInfo(cameraId, cameraInfo);
+            setCamera(mCamera, cameraInfo, cameraInfo.orientation);
             startPreview(surface);
         } catch (Exception e) {
             e.printStackTrace();
@@ -143,16 +130,37 @@ public class CameraPreview2 extends TextureView implements TextureView.SurfaceTe
         }
     }
 
-    private void openCamera() throws CameraUnavailableException {
-        if (Camera.getNumberOfCameras() > 0) {
-            try {
-                mCamera = Camera.open(CAMERA_ID);
-                assert mCamera != null;
-            } catch (Exception e) {
-                throw new CameraUnavailableException(e);
-            }
-        } else {
+    public Camera.CameraInfo getCameraInfo() {
+        return cameraInfo;
+    }
+
+    private int findCameraId() throws CameraUnavailableException {
+        int numberOfCameras = Camera.getNumberOfCameras();
+        Log.d(TAG, "findCameraId() called, numberOfCameras = " + numberOfCameras);
+        if (numberOfCameras <= 0) {
+            Log.d(TAG, "openCamera() called failed,not found camera!");
             throw new CameraUnavailableException();
+        }
+
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        for (int i = 0; i < numberOfCameras; i++) {
+            Camera.getCameraInfo(i, cameraInfo);
+            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                Log.d(TAG, "findCameraId() called,cameraInfo.orientation = " + cameraInfo.orientation);
+                return i;
+            }
+        }
+        return Camera.CameraInfo.CAMERA_FACING_BACK;
+    }
+
+
+    private void openCamera() throws CameraUnavailableException {
+        cameraId = findCameraId();
+        try {
+            mCamera = Camera.open(cameraId);
+            assert mCamera != null;
+        } catch (Exception e) {
+            throw new CameraUnavailableException(e);
         }
     }
 

@@ -134,28 +134,9 @@ public class CameraPreview2 extends TextureView implements TextureView.SurfaceTe
         return cameraInfo;
     }
 
-    private int findCameraId() throws CameraUnavailableException {
-        int numberOfCameras = Camera.getNumberOfCameras();
-        Log.d(TAG, "findCameraId() called, numberOfCameras = " + numberOfCameras);
-        if (numberOfCameras <= 0) {
-            Log.d(TAG, "openCamera() called failed,not found camera!");
-            throw new CameraUnavailableException();
-        }
-
-        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-        for (int i = 0; i < numberOfCameras; i++) {
-            Camera.getCameraInfo(i, cameraInfo);
-            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                Log.d(TAG, "findCameraId() called,cameraInfo.orientation = " + cameraInfo.orientation);
-                return i;
-            }
-        }
-        return Camera.CameraInfo.CAMERA_FACING_BACK;
-    }
-
 
     private void openCamera() throws CameraUnavailableException {
-        cameraId = findCameraId();
+        cameraId = CameraUtils.findCameraId();
         try {
             mCamera = Camera.open(cameraId);
             assert mCamera != null;

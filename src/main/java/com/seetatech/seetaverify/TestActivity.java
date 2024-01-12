@@ -33,6 +33,7 @@ public class TestActivity extends AppCompatActivity {
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
         etRegister = findViewById(R.id.et_register_name);
         tvName = findViewById(R.id.tv_name);
+
         faceRecognitionView.setFaceRegisterListener((isSuccess, key) -> {
             Log.d(TAG, "onRegisterFinish, isSuccess = " + isSuccess + ",key = " + key);
         });
@@ -61,7 +62,7 @@ public class TestActivity extends AppCompatActivity {
         new Thread(() -> {
             faceRecognitionView.initEngin();
         }).start();
-        faceRecognitionView.resumeCamera(0, 0);
+        faceRecognitionView.open();
     }
 
 

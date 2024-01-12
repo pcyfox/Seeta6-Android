@@ -248,4 +248,9 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         cameraPreview.onPause();
     }
 
+
+    public  void open(){
+        cameraPreview.open();
+    }
+
 }

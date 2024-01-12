@@ -47,14 +47,15 @@ public class LaunchActivity extends AppCompatActivity {
 
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.btnTest:
-                startActivity(new Intent(this, TestActivity.class));
-                break;
             case R.id.btnStart:
                 startActivity(new Intent(this, MainActivity.class));
                 break;
             case R.id.btnRegisterFace:
                 startRegisterFace();
+                break;
+
+            case R.id.btnTest:
+                startActivity(new Intent(this, TestActivity.class));
                 break;
             case R.id.btnTestDialog:
                 startActivity(new Intent(this, TestDialogActivity.class));

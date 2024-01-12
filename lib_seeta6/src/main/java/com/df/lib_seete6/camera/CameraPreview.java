@@ -20,6 +20,7 @@ import android.content.Context;
 import android.hardware.Camera;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Pair;
 import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -79,6 +80,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public CameraPreview(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+
         mHolder = getHolder();
         mHolder.addCallback(this);
     }
@@ -183,21 +185,27 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    public void open(int id, int rotation) {
+    public void open(int id, int orientation) {
         this.cameraId = id;
-        open(rotation);
+        open(orientation);
     }
 
-    public void open(int rotation) {
-        Log.d(TAG, "onResume() called with: rotation = [" + rotation + "]");
-        mOpenCameraAction.setRotation(rotation);
+    public void open(int orientation) {
+        Log.d(TAG, "open() called with: orientation = [" + orientation + "]");
+        mOpenCameraAction.setDisplayOrientation(orientation);
         removeCallbacks(mOpenCameraAction);
         postDelayed(mOpenCameraAction, 100L);
     }
 
     public void open() {
-        open(0);
+        open(Surface.ROTATION_0);
     }
+
+
+    public Pair<Integer, Camera.CameraInfo> findCamera() throws CameraUnavailableException {
+        return CameraUtils.findCamera();
+    }
+
 
     public void onPause() {
         stopPreviewAndFreeCamera();
@@ -218,8 +226,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
 
-    private void openCamera() throws CameraUnavailableException {
-        if (cameraId < 0) cameraId = CameraUtils.findCameraId();
+    private Pair<Integer, Camera.CameraInfo> openCamera() throws CameraUnavailableException {
+        Pair<Integer, Camera.CameraInfo> info = CameraUtils.findCamera();
+        if (cameraId < 0) cameraId = info.first;
         Log.d(TAG, "openCamera() called,cameraId =" + cameraId);
         try {
             mCamera = Camera.open(cameraId);
@@ -228,6 +237,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             e.printStackTrace();
             throw new CameraUnavailableException(e);
         }
+        return info;
     }
 
     private void stopPreviewAndFreeCamera() {
@@ -280,21 +290,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     private class OpenCameraAction implements Runnable {
-        private int rotation = 0;
+        private int displayOrientation = 0;
 
-        public void setRotation(int rotation) {
-            this.rotation = rotation;
+        public void setDisplayOrientation(int displayOrientation) {
+            this.displayOrientation = displayOrientation;
         }
 
         @Override
         public void run() {
             try {
-                openCamera();
-                Camera.CameraInfo info = new Camera.CameraInfo();
-                Camera.getCameraInfo(cameraId, info);
-                setCamera(mCamera, info, rotation);
+                Camera.CameraInfo info = openCamera().second;
+                setCamera(mCamera, info, displayOrientation);
                 removeCallbacks(mStartPreviewAction);
-
                 handleOrientation();
                 postDelayed(mStartPreviewAction, 50);
             } catch (Exception e) {
@@ -303,6 +310,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     mCallbacks.onCameraUnavailable(ErrorCode.CAMERA_UNAVAILABLE_ERROR);
                 }
             }
+
         }
     }
 

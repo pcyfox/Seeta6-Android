@@ -2,6 +2,7 @@ package com.df.lib_seete6.camera;
 
 import android.hardware.Camera;
 import android.util.Log;
+import android.util.Pair;
 
 public final class CameraUtils {
     private CameraUtils() {
@@ -9,7 +10,7 @@ public final class CameraUtils {
 
     private static final String TAG = "CameraUtils";
 
-    public static int findCameraId() throws CameraUnavailableException {
+    public static Pair<Integer, Camera.CameraInfo> findCamera() throws CameraUnavailableException {
         int numberOfCameras = Camera.getNumberOfCameras();
         if (numberOfCameras <= 0) {
             Log.d(TAG, "findCameraId() called failed,not found camera!");
@@ -21,11 +22,12 @@ public final class CameraUtils {
         for (int i = 0; i < numberOfCameras; i++) {
             Camera.getCameraInfo(i, cameraInfo);
             if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                Log.d(TAG, "findCameraId()  front:" + i);
+                Log.d(TAG, "findCameraId()  front camera id:" + i + ", orientation:" + cameraInfo.orientation);
                 if (i > maxFrontCameraId) maxFrontCameraId = i;
             }
         }
-        if (maxFrontCameraId >= 0) return maxFrontCameraId;
-        return Camera.CameraInfo.CAMERA_FACING_BACK;
+        if (maxFrontCameraId >= 0) return new Pair<>(maxFrontCameraId, cameraInfo);
+
+        return new Pair<>(0, cameraInfo);
     }
 }

@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Surface;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,7 @@ import com.df.lib_seete6.PresenterImpl;
 import com.df.lib_seete6.Target;
 import com.df.lib_seete6.camera.CameraCallbacks;
 import com.df.lib_seete6.camera.CameraPreview;
+import com.df.lib_seete6.camera.CameraUtils;
 import com.df.lib_seete6.config.EnginConfig;
 import com.df.lib_seete6.utils.EnginHelper;
 
@@ -50,12 +52,9 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     private float previewScaleX = 1.0f;
     private float previewScaleY = 1.0f;
     private long detectCount = 0L;
-
     private volatile boolean isStartDetected = false;
     private volatile boolean isInit = false;
-
     private final Object lock = new Object();
-
     private FaceRecognitionListener faceRecognitionListener;
     private FaceRegisterListener faceRegisterListener;
 
@@ -91,6 +90,7 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
                     }
 
                     int orientation = cameraPreview.getCameraRotation();
+
                     presenter.detect(data, previewSize.width, previewSize.height, orientation > 0 ? orientation : -1);
                 }
             }
@@ -224,7 +224,6 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         }
     }
 
-
     public boolean release() {
         pauseCamera();
         pauseDetect();
@@ -244,18 +243,24 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
         cameraPreview.open(cameraId, rotation);
     }
 
-    public void open(int rotation) {
-        cameraPreview.open(rotation);
+    public void open(int orientation) {
+        cameraPreview.open(orientation);
     }
 
     public void open() {
-        cameraPreview.open();
-    }
+        int orientation = cameraPreview.findCamera().second.orientation;
+        int dro = 360 - orientation;
+        if (dro > 0) {
+            int r = (dro / 90) % 90;
+            cameraPreview.open(r);
+        } else {
+            cameraPreview.open();
+        }
 
+    }
 
     public void pauseCamera() {
         cameraPreview.onPause();
     }
-
 
 }

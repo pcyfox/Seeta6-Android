@@ -1,16 +1,20 @@
 package com.seetatech.seetaverify;
 
+import android.Manifest;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Surface;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.df.lib_seete6.BuildConfig;
 import com.df.lib_seete6.Target;
+import com.df.lib_seete6.config.EnginConfig;
 import com.df.lib_seete6.view.FaceRecognitionListener;
 import com.df.lib_seete6.view.FaceRecognitionView;
 import com.df.lib_seete6.view.FaceRegisterListener;
@@ -25,6 +29,7 @@ public class TestActivity extends AppCompatActivity {
     private FaceRecognitionView faceRecognitionView;
     private EditText etRegister;
     private TextView tvName;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,12 +61,16 @@ public class TestActivity extends AppCompatActivity {
         });
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
         new Thread(() -> {
-            faceRecognitionView.initEngin();
+            EnginConfig config = new EnginConfig();
+            config.modelRootDir = "";
+            faceRecognitionView.initEngin(config);
         }).start();
+
         faceRecognitionView.open();
     }
 
@@ -77,7 +86,7 @@ public class TestActivity extends AppCompatActivity {
         super.onDestroy();
         boolean release = faceRecognitionView.release();
         Log.w(TAG, "---------------onDestroy() called release 1 ret=" + release);
-        if(!release){
+        if (!release) {
             new Thread(() -> {
                 try {
                     Thread.sleep(8000);

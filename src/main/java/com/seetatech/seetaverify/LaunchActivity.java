@@ -19,10 +19,11 @@ import java.io.File;
 
 public class LaunchActivity extends AppCompatActivity {
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initEngin();
+       // initEngin();
         setContentView(R.layout.activity_launch);
         requestPermission();
         this.setFinishOnTouchOutside(false);
@@ -34,11 +35,11 @@ public class LaunchActivity extends AppCompatActivity {
         releaseEngine();
     }
 
-    private void initEngin() {
-        new Thread(() -> {
-            EnginHelper.getInstance().initEngine(this, true);
-        }).start();
-    }
+//    private void initEngin() {
+//        new Thread(() -> {
+//            EnginHelper.getInstance().initEngine(this, true);
+//        }).start();
+//    }
 
     private void releaseEngine() {
         EnginHelper.getInstance().release();
@@ -77,10 +78,10 @@ public class LaunchActivity extends AppCompatActivity {
 
     private void requestPermission() {
         // 先判断有没有权限
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
         } else {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, 200);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, 200);
         }
     }
 

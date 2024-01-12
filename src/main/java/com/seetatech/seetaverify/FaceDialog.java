@@ -40,6 +40,7 @@ public class FaceDialog extends AppCompatDialog {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.dialog_face);
+        getWindow().setDimAmount(0f);
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
         assert faceRecognitionView != null;
 //        faceRecognitionView.setInterceptor(new ExtractFaceResultInterceptor() {
@@ -80,16 +81,13 @@ public class FaceDialog extends AppCompatDialog {
             @Override
             public void onDetectFinish(Target target, Mat matBgr, Rect faceRect) {
                 Log.d(TAG, "onDetectFinish() called with: target = [" + target + "], matBgr = [" + matBgr + "], faceRect = [" + faceRect + "]");
-
             }
 
             @Override
             public void onTakePictureFinish(String path, String name) {
                 Log.d(TAG, "onTakePictureFinish() called with: path = [" + path + "], name = [" + name + "]");
-
             }
         });
-
         faceRecognitionView.open();
     }
 

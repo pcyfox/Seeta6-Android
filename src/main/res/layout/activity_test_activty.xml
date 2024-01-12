@@ -9,12 +9,14 @@
 
     <com.df.lib_seete6.view.FaceRecognitionView
         android:id="@+id/faceRecognitionView"
-        android:layout_width="960dp"
-        android:layout_height="640dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.7"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.6" />
 
 
     <androidx.appcompat.widget.LinearLayoutCompat

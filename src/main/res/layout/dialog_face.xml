@@ -17,6 +17,7 @@
 
 
     <com.df.lib_seete6.view.FaceRecognitionView
+        android:background="@color/black"
         android:id="@+id/faceRecognitionView"
         android:layout_width="960dp"
         android:layout_height="640dp"

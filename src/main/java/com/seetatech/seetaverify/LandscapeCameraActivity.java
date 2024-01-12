@@ -64,7 +64,7 @@ public class LandscapeCameraActivity extends AppCompatActivity implements SeetaC
     @Override
     protected void onResume() {
         super.onResume();
-        cameraPreview.onResume(1, 1);
+        cameraPreview.open();
     }
 
     @Override

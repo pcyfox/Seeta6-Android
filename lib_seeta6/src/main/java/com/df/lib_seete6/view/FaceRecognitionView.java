@@ -240,17 +240,22 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
      * @param rotation 0:90度 1：180度 2：270度
      * @param cameraId :Camera.CameraInfo.CAMERA_FACING_FRONT,Camera.CameraInfo.CAMERA_FACING_BACK,
      */
-    public void resumeCamera(int rotation, int cameraId) {
-        cameraPreview.onResume(rotation, cameraId);
+    public void open(int cameraId, int rotation) {
+        cameraPreview.open(cameraId, rotation);
     }
+
+    public void open(int rotation) {
+        cameraPreview.open(rotation);
+    }
+
+    public void open() {
+        cameraPreview.open();
+    }
+
 
     public void pauseCamera() {
         cameraPreview.onPause();
     }
 
-
-    public  void open(){
-        cameraPreview.open();
-    }
 
 }

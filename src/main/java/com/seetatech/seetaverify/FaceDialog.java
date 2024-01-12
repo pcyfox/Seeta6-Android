@@ -90,7 +90,7 @@ public class FaceDialog extends AppCompatDialog {
             }
         });
 
-        faceRecognitionView.resumeCamera(0, 0);
+        faceRecognitionView.open();
     }
 
     @Override

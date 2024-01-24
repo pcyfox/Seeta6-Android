@@ -203,7 +203,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
 
     public Pair<Integer, Camera.CameraInfo> findCamera() throws CameraUnavailableException {
-        return CameraUtils.findCamera();
+        return CameraUtils.findBaseFrontCamera();
     }
 
 
@@ -227,9 +227,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
 
     private Pair<Integer, Camera.CameraInfo> openCamera() throws CameraUnavailableException {
-        Pair<Integer, Camera.CameraInfo> info = CameraUtils.findCamera();
+        Pair<Integer, Camera.CameraInfo> info = CameraUtils.findBaseFrontCamera();
         if (cameraId < 0) cameraId = info.first;
-        Log.d(TAG, "openCamera() called,cameraId =" + cameraId);
+        Log.d(TAG, "openCamera() called,cameraId =" + cameraId + ",facing:" + info.second.facing);
         try {
             mCamera = Camera.open(cameraId);
             assert mCamera != null;

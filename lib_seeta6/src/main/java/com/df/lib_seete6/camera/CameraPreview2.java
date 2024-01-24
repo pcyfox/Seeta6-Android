@@ -136,7 +136,7 @@ public class CameraPreview2 extends TextureView implements TextureView.SurfaceTe
 
 
     private void openCamera() throws CameraUnavailableException {
-        cameraId = CameraUtils.findCamera().first;
+        cameraId = CameraUtils.findBaseFrontCamera().first;
         try {
             mCamera = Camera.open(cameraId);
             assert mCamera != null;

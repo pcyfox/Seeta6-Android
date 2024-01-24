@@ -10,24 +10,23 @@ public final class CameraUtils {
 
     private static final String TAG = "CameraUtils";
 
-    public static Pair<Integer, Camera.CameraInfo> findCamera() throws CameraUnavailableException {
+    public static Pair<Integer, Camera.CameraInfo> findBaseFrontCamera() throws CameraUnavailableException {
         int numberOfCameras = Camera.getNumberOfCameras();
         if (numberOfCameras <= 0) {
-            Log.d(TAG, "findCameraId() called failed,not found camera!");
+            Log.e(TAG, "findCameraId() called failed,not found camera!");
             throw new CameraUnavailableException();
         }
 
         Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-        int maxFrontCameraId = -1;
+        int minFrontCameraId = Integer.MAX_VALUE;
         for (int i = 0; i < numberOfCameras; i++) {
             Camera.getCameraInfo(i, cameraInfo);
             if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                Log.d(TAG, "findCameraId()  front camera id:" + i + ", orientation:" + cameraInfo.orientation);
-                if (i > maxFrontCameraId) maxFrontCameraId = i;
+                //Log.d(TAG, "findCameraId()  front camera id:" + i + ", orientation:" + cameraInfo.orientation);
+                if (i < minFrontCameraId) minFrontCameraId = i;
             }
         }
-        if (maxFrontCameraId >= 0) return new Pair<>(maxFrontCameraId, cameraInfo);
-
+        if (minFrontCameraId != Integer.MAX_VALUE) return new Pair<>(minFrontCameraId, cameraInfo);
         return new Pair<>(0, cameraInfo);
     }
 }

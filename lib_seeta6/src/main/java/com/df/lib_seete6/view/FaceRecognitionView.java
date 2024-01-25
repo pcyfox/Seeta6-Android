@@ -250,15 +250,16 @@ public class FaceRecognitionView extends FrameLayout implements SeetaContract.Vi
     }
 
     public void open() {
+        cameraPreview.open(calculateRotate());
+    }
+
+    public int calculateRotate() {
         int orientation = cameraPreview.findCamera().second.orientation;
         int dro = 360 - orientation;
         if (dro > 0) {
-            int r = (dro / 90) % 90;
-            cameraPreview.open(r);
-        } else {
-            cameraPreview.open();
+            return (dro / 90) % 90;
         }
-
+        return 0;
     }
 
     public void pauseCamera() {

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatDialog;
 import com.df.lib_seete6.Target;
 import com.df.lib_seete6.view.FaceRecognitionListener;
 import com.df.lib_seete6.view.FaceRecognitionView;
+import com.df.lib_seete6.view.FaceRegisterListener;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -43,28 +45,9 @@ public class FaceDialog extends AppCompatDialog {
         getWindow().setDimAmount(0f);
         faceRecognitionView = findViewById(R.id.faceRecognitionView);
         assert faceRecognitionView != null;
-//        faceRecognitionView.setInterceptor(new ExtractFaceResultInterceptor() {
-//            @Override
-//            public boolean onPrepare(SeetaRect rect) {
-//                Log.d(TAG, "onPrepare() called with: rect = [" + rect + "]");
-//                boolean isGoodFace = rect.width * rect.height > 200 * 200;
-//                if (isGoodFace) {
-//                    faceRecognitionView.pauseDetect();
-//                }
-//                return isGoodFace;
-//            }
-//
-//            @Override
-//            public boolean onExtractFeats(float[] feats, FaceAntiSpoofing.Status status) {
-//                Log.d(TAG, "onExtractFeats() called with: feats = [" + feats + "], status = [" + status + "]");
-//                return true;
-//            }
-//        });
-
-
         Button btnRegisterFace = findViewById(R.id.btnRegister);
         btnRegisterFace.setOnClickListener(v -> {
-            faceRecognitionView.registerByFrame("SPTLT");
+            faceRecognitionView.registerByFrame("西门庆");
         });
 
     }
@@ -72,15 +55,18 @@ public class FaceDialog extends AppCompatDialog {
     @Override
     protected void onStart() {
         super.onStart();
-        faceRecognitionView.init();
         new Thread(() -> {
             boolean initRet = faceRecognitionView.initEngin();
             Log.d(TAG, "onStart() initRet=" + initRet);
         }).start();
+
+
+        faceRecognitionView.init();
         faceRecognitionView.setFaceRecognitionListener(new FaceRecognitionListener() {
             @Override
             public void onDetectFinish(Target target, Mat matBgr, Rect faceRect) {
                 Log.d(TAG, "onDetectFinish() called with: target = [" + target + "], matBgr = [" + matBgr + "], faceRect = [" + faceRect + "]");
+                toast("识别到人脸:" + target.getKey() + ",similarity:" + target.getSimilarity());
             }
 
             @Override
@@ -88,7 +74,19 @@ public class FaceDialog extends AppCompatDialog {
                 Log.d(TAG, "onTakePictureFinish() called with: path = [" + path + "], name = [" + name + "]");
             }
         });
+        faceRecognitionView.setFaceRegisterListener((isSuccess, key) -> {
+            Log.d(TAG, "onRegisterFinish() called with: isSuccess = [" + isSuccess + "], key = [" + key + "]");
+            toast("注册人脸:" + key + ",isSuccess:" + isSuccess);
+        });
         faceRecognitionView.open();
+        faceRecognitionView.resumeDetect();
+    }
+
+
+    private void toast(String tsxt) {
+        if (faceRecognitionView == null) return;
+        faceRecognitionView.post(
+                () -> Toast.makeText(faceRecognitionView.getContext(), tsxt, Toast.LENGTH_SHORT).show());
     }
 
     @Override
